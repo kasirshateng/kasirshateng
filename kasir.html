@@ -6,6 +6,29 @@
     <title>Kasir - SATHENG POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Pengaturan khusus saat mencetak struk ke printer eksternal */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 58mm; /* Sesuaikan dengan ukuran kertas printer (58mm atau 80mm) */
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 11px;
+                color: black;
+                padding: 4px;
+                background: white;
+            }
+        }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
 
@@ -61,7 +84,7 @@
         </div>
     </div>
 
-    <!-- Modal Sukses Transaksi Modern -->
+    <!-- Modal Sukses Transaksi dengan Pilihan Cetak Nota -->
     <div id="modal-success" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 p-4">
         <div class="bg-white p-6 rounded-2xl w-full max-w-sm text-center space-y-4 shadow-2xl transform transition-all">
             <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
@@ -69,11 +92,51 @@
             </div>
             <div>
                 <h3 class="text-xl font-bold text-gray-800">Transaksi Berhasil!</h3>
-                <p class="text-xs text-gray-500 mt-1">Data pesanan telah tercatat di database.</p>
+                <p class="text-xs text-gray-500 mt-1">Data pesanan telah tercatat. Ingin mencetak struk nota?</p>
             </div>
-            <button onclick="tutupModalSukses()" class="w-full bg-amber-900 hover:bg-amber-800 text-white font-bold py-2.5 rounded-xl shadow transition text-sm">
-                Kembali ke Menu
-            </button>
+            <div class="flex flex-col space-y-2 pt-2">
+                <button onclick="cetakNota()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow transition text-sm flex items-center justify-center gap-2">
+                    <span>🖨️</span> Cetak Nota Sekarang
+                </button>
+                <button onclick="tutupModalSukses()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl transition text-sm">
+                    Tidak, Kembali ke Menu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Area Cetak Struk (Tersembunyi di layar, muncul hanya saat diprint) -->
+    <div id="print-area" class="hidden">
+        <div style="text-align: center; margin-bottom: 8px;">
+            <h3 style="font-weight: bold; font-size: 14px; margin: 0;">KAFE SATHENG</h3>
+            <p style="font-size: 10px; margin: 2px 0;">Struk Pembayaran Kasir</p>
+        </div>
+        <div style="border-bottom: 1px dashed black; margin-bottom: 6px;"></div>
+        <div style="font-size: 10px; line-height: 1.4;">
+            <p style="margin: 0;" id="struk-waktu">Waktu: -</p>
+            <p style="margin: 0;" id="struk-kasir">Kasir: -</p>
+            <p style="margin: 0;" id="struk-catatan">Catatan: -</p>
+        </div>
+        <div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>
+        
+        <!-- Daftar Item -->
+        <div id="struk-items" style="font-size: 10px; line-height: 1.4;"></div>
+
+        <div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>
+        <div style="font-size: 11px; font-weight: bold;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>TOTAL:</span>
+                <span id="struk-total">Rp 0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-weight: normal; font-size: 10px; margin-top: 2px;">
+                <span id="struk-metode">Metode: Tunai</span>
+                <span>LUNAS</span>
+            </div>
+        </div>
+        <div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>
+        <div style="text-align: center; font-size: 9px; margin-top: 8px;">
+            <p style="margin: 0;">Terima Kasih Atas Kunjungan Anda!</p>
+            <p style="margin: 2px 0;">~ Kafe SATHENG ~</p>
         </div>
     </div>
 
@@ -83,10 +146,8 @@
             window.location.href = "index.html";
         }
 
-        const namaKasir = localStorage.getItem("satheng_nama");
-        if (namaKasir) {
-            document.getElementById('kasir-nama').innerText = `Kasir: ${namaKasir}`;
-        }
+        const namaKasir = localStorage.getItem("satheng_nama") || "Kasir";
+        document.getElementById('kasir-nama').innerText = `Kasir: ${namaKasir}`;
 
         function logout() {
             localStorage.clear();
@@ -96,6 +157,7 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbzOj-GNILFwpKfAF1bnYT0YVyM4mOBzkdWM7qTrDryqFLVCj5w6ym_L3Xf-VanZPZ-9yg/exec";
         let menuList = [];
         let cart = [];
+        let lastTransactionData = null; // Menyimpan data transaksi terakhir untuk keperluan cetak nota
 
         async function loadMenu() {
             try {
@@ -215,8 +277,20 @@
                 });
                 const result = await res.json();
                 if(result.status === "success") {
-                    // Tampilkan modal sukses modern alih-alih alert
+                    // Simpan salinan transaksi terakhir sebelum keranjang di-reset
+                    lastTransactionData = {
+                        items: [...cart],
+                        total: totalHarga,
+                        metode: metodeBayar,
+                        catatan: catatan || "-",
+                        waktu: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
+                        kasir: namaKasir
+                    };
+
+                    // Tampilkan modal sukses dengan pilihan Cetak Nota
                     document.getElementById('modal-success').classList.remove('hidden');
+                    
+                    // Reset keranjang belanja
                     cart = [];
                     document.getElementById('order-note').value = "";
                     renderCart();
@@ -229,6 +303,34 @@
                 btn.innerText = "Proses Pembayaran";
                 btn.disabled = false;
             }
+        }
+
+        function cetakNota() {
+            if (!lastTransactionData) return;
+
+            // Masukkan data transaksi ke template struk
+            document.getElementById('struk-waktu').innerText = `Waktu: ${lastTransactionData.waktu}`;
+            document.getElementById('struk-kasir').innerText = `Kasir: ${lastTransactionData.kasir}`;
+            document.getElementById('struk-catatan').innerText = `Catatan: ${lastTransactionData.catatan}`;
+            document.getElementById('struk-total').innerText = `Rp ${Number(lastTransactionData.total).toLocaleString('id-ID')}`;
+            document.getElementById('struk-metode').innerText = `Bayar: ${lastTransactionData.metode}`;
+
+            let itemsHtml = '';
+            lastTransactionData.items.forEach(item => {
+                itemsHtml += `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                        <span>${item.Nama_Menu} x${item.qty}</span>
+                        <span>Rp ${(item.Harga * item.qty).toLocaleString('id-ID')}</span>
+                    </div>
+                `;
+            });
+            document.getElementById('struk-items').innerHTML = itemsHtml;
+
+            // Tutup modal lalu panggil perintah print perangkat
+            tutupModalSukses();
+            setTimeout(() => {
+                window.print();
+            }, 300);
         }
 
         function tutupModalSukses() {
