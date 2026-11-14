@@ -9,8 +9,37 @@
     <link rel="stylesheet" href="css/style.css">
 
     <style>
-        /* Pengaturan cetak nota */
+        /* MODAL SUKSES */
+        #modal-success {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(0, 0, 0, 0.55);
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        #modal-success.show {
+            display: flex;
+        }
+
+        /* AREA STRUK */
+        #print-area {
+            display: none;
+        }
+
         @media print {
+            @page {
+                size: 80mm auto;
+                margin: 4mm;
+            }
+
+            body {
+                background: white !important;
+            }
+
             body * {
                 visibility: hidden !important;
             }
@@ -25,64 +54,26 @@
                 position: absolute;
                 left: 0;
                 top: 0;
-                width: 58mm;
-                font-family: 'Courier New', Courier, monospace;
+                width: 72mm;
+                color: #000;
+                background: #fff;
+                font-family: monospace;
                 font-size: 11px;
-                color: black;
-                padding: 4px;
-                background: white;
-            }
-        }
-
-        /* Modal sukses */
-        #modal-success {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 99999;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
-            background: rgba(0, 0, 0, .55);
-            -webkit-backdrop-filter: blur(4px);
-            backdrop-filter: blur(4px);
-            pointer-events: auto;
-        }
-
-        #modal-success .modal-content {
-            width: 100%;
-            max-width: 380px;
-            max-height: calc(100dvh - 32px);
-            overflow-y: auto;
-            padding: 24px;
-            background: white;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
-            pointer-events: auto;
-        }
-
-        #modal-success button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            min-height: 48px;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            pointer-events: auto;
-        }
-
-        @media (max-width: 640px) {
-            #modal-success {
-                padding: 16px;
             }
 
-            #modal-success .modal-content {
-                padding: 22px;
+            .receipt-center {
+                text-align: center;
+            }
+
+            .receipt-row {
+                display: flex;
+                justify-content: space-between;
+                gap: 8px;
+            }
+
+            .receipt-divider {
+                border-top: 1px dashed #000;
+                margin: 8px 0;
             }
         }
     </style>
@@ -98,25 +89,19 @@
             <header class="bg-amber-900 text-white p-4 flex justify-between items-center shadow">
                 <div class="flex items-center space-x-3">
                     <h1 class="text-xl font-bold">☕ KAFE SATHENG - Kasir</h1>
-
-                    <span id="loader-status"
-                        class="text-xs bg-amber-800 px-2 py-1 rounded">
+                    <span id="loader-status" class="text-xs bg-amber-800 px-2 py-1 rounded">
                         Memuat Menu...
                     </span>
                 </div>
 
-                <button
-                    type="button"
-                    onclick="logout()"
+                <button onclick="logout()"
                     class="bg-red-700 hover:bg-red-800 text-xs px-3 py-1.5 rounded font-semibold transition">
                     Keluar
                 </button>
             </header>
 
-            <div
-                class="p-4 overflow-y-auto flex-1 grid grid-cols-3 gap-3"
+            <div class="p-4 overflow-y-auto flex-1 grid grid-cols-3 gap-3"
                 id="menu-container">
-                <!-- Menu dimuat otomatis -->
             </div>
 
         </div>
@@ -125,27 +110,21 @@
         <div class="w-2/5 flex flex-col bg-gray-50">
 
             <div class="p-4 bg-white border-b border-gray-200 shadow-sm flex justify-between items-center">
-                <h2 class="text-lg font-bold text-gray-800">
-                    Keranjang Pesanan
-                </h2>
+                <h2 class="text-lg font-bold text-gray-800">Keranjang Pesanan</h2>
 
-                <span
-                    id="kasir-nama"
+                <span id="kasir-nama"
                     class="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
                     Kasir
                 </span>
             </div>
 
-            <div
-                class="flex-1 overflow-y-auto p-4 space-y-2"
-                id="cart-items">
-
+            <div class="flex-1 overflow-y-auto p-4 space-y-2" id="cart-items">
                 <p class="text-gray-400 text-center py-10">
                     Keranjang masih kosong
                 </p>
-
             </div>
 
+            <!-- PEMBAYARAN -->
             <div class="p-4 bg-white border-t border-gray-200 shadow-lg space-y-3">
 
                 <div class="flex justify-between text-lg font-bold text-gray-800">
@@ -153,13 +132,14 @@
                     <span id="grand-total">Rp 0</span>
                 </div>
 
+                <!-- METODE PEMBAYARAN -->
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">
                         Metode Pembayaran:
                     </label>
 
-                    <select
-                        id="payment-method"
+                    <select id="payment-method"
+                        onchange="aturMetodePembayaran()"
                         class="w-full border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
 
                         <option value="Tunai">Tunai</option>
@@ -169,131 +149,110 @@
                     </select>
                 </div>
 
+                <!-- PEMBAYARAN TUNAI -->
+                <div id="cash-payment-fields" class="space-y-2">
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">
+                            Nominal Uang Dibayarkan:
+                        </label>
+
+                        <input
+                            type="number"
+                            id="nominal-bayar"
+                            min="0"
+                            step="500"
+                            inputmode="numeric"
+                            placeholder="Masukkan nominal uang"
+                            oninput="hitungKembalian()"
+                            class="w-full border rounded-lg p-3 text-lg font-bold focus:ring-2 focus:ring-amber-900 outline-none"
+                        >
+                    </div>
+
+                    <div class="flex justify-between items-center bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                        <span class="text-sm font-semibold text-gray-700">
+                            Kembalian:
+                        </span>
+
+                        <span id="nominal-kembalian"
+                            class="text-lg font-extrabold text-emerald-700">
+                            Rp 0
+                        </span>
+                    </div>
+
+                    <p id="cash-warning" class="text-xs text-red-600 hidden">
+                        Nominal pembayaran masih kurang dari total belanja.
+                    </p>
+
+                </div>
+
+                <!-- CATATAN -->
                 <div>
                     <input
                         type="text"
                         id="order-note"
                         placeholder="Catatan pesanan (misal: Meja 5)"
-                        class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-900 outline-none">
+                        class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-900 outline-none"
+                    >
                 </div>
 
+                <!-- TOMBOL BAYAR -->
                 <button
-                    type="button"
                     onclick="prosesBayar()"
                     id="btn-bayar"
-                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow transition disabled:opacity-50"
+                    type="button"
+                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled>
-
                     Proses Pembayaran
-
                 </button>
 
             </div>
         </div>
     </div>
 
-    <!-- MODAL SUKSES -->
+
+    <!-- MODAL TRANSAKSI BERHASIL -->
     <div id="modal-success">
 
-        <div class="modal-content">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-sm text-center space-y-4 shadow-2xl">
 
             <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
                 ✓
             </div>
 
-            <div class="mt-4">
+            <div>
                 <h3 class="text-xl font-bold text-gray-800">
                     Transaksi Berhasil!
                 </h3>
 
-                <p class="text-xs text-gray-500 mt-2">
-                    Data pesanan telah tercatat. Ingin mencetak struk nota?
+                <p class="text-xs text-gray-500 mt-1">
+                    Data pesanan telah tercatat di database.
                 </p>
             </div>
 
-            <div class="flex flex-col space-y-2 pt-4">
+            <button
+                type="button"
+                onclick="cetakNota()"
+                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow transition text-sm">
+                Cetak Struk
+            </button>
 
-                <button
-                    type="button"
-                    onclick="cetakNota()"
-                    class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 shadow transition text-sm gap-2">
+            <button
+                type="button"
+                onclick="tutupModalSukses()"
+                class="w-full bg-amber-900 hover:bg-amber-800 text-white font-bold py-2.5 rounded-xl shadow transition text-sm">
+                Tidak, Kembali ke Menu
+            </button>
 
-                    <span>🖨️</span>
-                    Cetak Nota Sekarang
-
-                </button>
-
-                <button
-                    type="button"
-                    id="btn-kembali-menu"
-                    onclick="window.tutupModalSukses()"
-                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 transition text-sm">
-
-                    Tidak, Kembali ke Menu
-
-                </button>
-
-            </div>
         </div>
     </div>
 
-    <!-- AREA CETAK NOTA -->
-    <div id="print-area" class="hidden">
 
-        <div style="text-align: center; margin-bottom: 8px;">
-            <h3 style="font-weight: bold; font-size: 14px; margin: 0;">
-                KAFE SATHENG
-            </h3>
+    <!-- AREA CETAK STRUK -->
+    <div id="print-area"></div>
 
-            <p style="font-size: 10px; margin: 2px 0;">
-                Struk Pembayaran Kasir
-            </p>
-        </div>
-
-        <div style="border-bottom: 1px dashed black; margin-bottom: 6px;"></div>
-
-        <div style="font-size: 10px; line-height: 1.4;">
-            <p style="margin: 0;" id="struk-waktu">Waktu: -</p>
-            <p style="margin: 0;" id="struk-kasir">Kasir: -</p>
-            <p style="margin: 0;" id="struk-catatan">Catatan: -</p>
-        </div>
-
-        <div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>
-
-        <div id="struk-items" style="font-size: 10px; line-height: 1.4;"></div>
-
-        <div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>
-
-        <div style="font-size: 11px; font-weight: bold;">
-
-            <div style="display: flex; justify-content: space-between;">
-                <span>TOTAL:</span>
-                <span id="struk-total">Rp 0</span>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; font-weight: normal; font-size: 10px; margin-top: 2px;">
-                <span id="struk-metode">Metode: Tunai</span>
-                <span>LUNAS</span>
-            </div>
-
-        </div>
-
-        <div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>
-
-        <div style="text-align: center; font-size: 9px; margin-top: 8px;">
-            <p style="margin: 0;">
-                Terima Kasih Atas Kunjungan Anda!
-            </p>
-
-            <p style="margin: 2px 0;">
-                ~ Kafe SATHENG ~
-            </p>
-        </div>
-
-    </div>
 
     <script>
-
         // ==========================================
         // KEAMANAN LOGIN
         // ==========================================
@@ -302,10 +261,12 @@
             window.location.href = "index.html";
         }
 
-        const namaKasir = localStorage.getItem("satheng_nama") || "Kasir";
+        const namaKasir = localStorage.getItem("satheng_nama");
 
-        document.getElementById('kasir-nama').innerText =
-            `Kasir: ${namaKasir}`;
+        if (namaKasir) {
+            document.getElementById('kasir-nama').innerText =
+                `Kasir: ${namaKasir}`;
+        }
 
         function logout() {
             localStorage.clear();
@@ -325,13 +286,31 @@
 
 
         // ==========================================
-        // MEMUAT MENU
+        // FORMAT RUPIAH
+        // ==========================================
+
+        function formatRupiah(angka) {
+            return 'Rp ' + Number(angka || 0).toLocaleString('id-ID');
+        }
+
+
+        // ==========================================
+        // TOTAL KERANJANG
+        // ==========================================
+
+        function getTotalHarga() {
+            return cart.reduce((sum, item) => {
+                return sum + (Number(item.Harga) * item.qty);
+            }, 0);
+        }
+
+
+        // ==========================================
+        // LOAD MENU
         // ==========================================
 
         async function loadMenu() {
-
             try {
-
                 const res = await fetch(`${API_URL}?action=menu`);
 
                 menuList = await res.json();
@@ -345,8 +324,9 @@
 
             } catch (err) {
 
-                document.getElementById('loader-status').innerText =
-                    'Gagal Memuat';
+                console.error(err);
+
+                document.getElementById('loader-status').innerText = 'Gagal Memuat';
 
                 document.getElementById('loader-status').className =
                     'text-xs bg-red-700 px-2 py-1 rounded';
@@ -356,20 +336,20 @@
 
 
         // ==========================================
-        // MENAMPILKAN MENU
+        // TAMPILKAN MENU
         // ==========================================
 
         function renderMenu() {
-
             const container = document.getElementById('menu-container');
 
             container.innerHTML = '';
 
             if (menuList.length === 0) {
-
-                container.innerHTML =
-                    '<p class="text-gray-400 text-sm col-span-3 text-center py-10">Belum ada menu di database.</p>';
-
+                container.innerHTML = `
+                    <p class="text-gray-400 text-sm col-span-3 text-center py-10">
+                        Belum ada menu di database.
+                    </p>
+                `;
                 return;
             }
 
@@ -393,18 +373,17 @@
                         </div>
 
                         <p class="text-amber-900 font-extrabold mt-3 text-sm">
-                            Rp ${Number(item.Harga).toLocaleString('id-ID')}
+                            ${formatRupiah(item.Harga)}
                         </p>
 
                     </div>
                 `;
-
             });
         }
 
 
         // ==========================================
-        // TAMBAH KE KERANJANG
+        // TAMBAH MENU KE KERANJANG
         // ==========================================
 
         function tambahKeKeranjang(id) {
@@ -416,16 +395,12 @@
             const itemExist = cart.find(i => i.ID_Menu === id);
 
             if (itemExist) {
-
                 itemExist.qty += 1;
-
             } else {
-
                 cart.push({
                     ...produk,
                     qty: 1
                 });
-
             }
 
             renderCart();
@@ -433,7 +408,7 @@
 
 
         // ==========================================
-        // UBAH JUMLAH ITEM
+        // UBAH JUMLAH MENU
         // ==========================================
 
         function ubahQty(id, delta) {
@@ -445,10 +420,9 @@
                 item.qty += delta;
 
                 if (item.qty <= 0) {
-
                     cart = cart.filter(i => i.ID_Menu !== id);
-
                 }
+
             }
 
             renderCart();
@@ -456,23 +430,28 @@
 
 
         // ==========================================
-        // MENAMPILKAN KERANJANG
+        // RENDER KERANJANG
         // ==========================================
 
         function renderCart() {
 
             const container = document.getElementById('cart-items');
 
-            const btnBayar = document.getElementById('btn-bayar');
-
             if (cart.length === 0) {
 
-                container.innerHTML =
-                    '<p class="text-gray-400 text-center py-10">Keranjang masih kosong</p>';
+                container.innerHTML = `
+                    <p class="text-gray-400 text-center py-10">
+                        Keranjang masih kosong
+                    </p>
+                `;
 
                 document.getElementById('grand-total').innerText = 'Rp 0';
 
-                btnBayar.disabled = true;
+                document.getElementById('nominal-bayar').value = '';
+                document.getElementById('nominal-kembalian').innerText = 'Rp 0';
+                document.getElementById('cash-warning').classList.add('hidden');
+
+                document.getElementById('btn-bayar').disabled = true;
 
                 return;
             }
@@ -483,7 +462,7 @@
 
             cart.forEach(item => {
 
-                const subtotal = item.Harga * item.qty;
+                const subtotal = Number(item.Harga) * item.qty;
 
                 total += subtotal;
 
@@ -496,14 +475,13 @@
                             </h4>
 
                             <p class="text-xs text-gray-500">
-                                Rp ${Number(item.Harga).toLocaleString('id-ID')} x ${item.qty}
+                                ${formatRupiah(item.Harga)} x ${item.qty}
                             </p>
                         </div>
 
                         <div class="flex items-center space-x-2">
 
                             <button
-                                type="button"
                                 onclick="ubahQty('${item.ID_Menu}', -1)"
                                 class="bg-gray-200 px-2 py-1 rounded text-xs font-bold w-6 h-6 flex items-center justify-center">
                                 -
@@ -514,22 +492,129 @@
                             </span>
 
                             <button
-                                type="button"
                                 onclick="ubahQty('${item.ID_Menu}', 1)"
                                 class="bg-gray-200 px-2 py-1 rounded text-xs font-bold w-6 h-6 flex items-center justify-center">
                                 +
                             </button>
 
                         </div>
+
                     </div>
                 `;
-
             });
 
             document.getElementById('grand-total').innerText =
-                `Rp ${total.toLocaleString('id-ID')}`;
+                formatRupiah(total);
 
-            btnBayar.disabled = false;
+            aturMetodePembayaran();
+        }
+
+
+        // ==========================================
+        // METODE PEMBAYARAN
+        // ==========================================
+
+        function aturMetodePembayaran() {
+
+            const metode = document.getElementById('payment-method').value;
+
+            const cashFields = document.getElementById('cash-payment-fields');
+
+            if (metode === 'Tunai') {
+
+                cashFields.classList.remove('hidden');
+
+                hitungKembalian();
+
+            } else {
+
+                cashFields.classList.add('hidden');
+
+                document.getElementById('cash-warning').classList.add('hidden');
+
+                document.getElementById('btn-bayar').disabled =
+                    cart.length === 0;
+
+            }
+        }
+
+
+        // ==========================================
+        // HITUNG KEMBALIAN
+        // ==========================================
+
+        function hitungKembalian() {
+
+            const total = getTotalHarga();
+
+            const nominalBayar = Number(
+                document.getElementById('nominal-bayar').value
+            ) || 0;
+
+            const kembalian = nominalBayar - total;
+
+            const warning = document.getElementById('cash-warning');
+
+            const btnBayar = document.getElementById('btn-bayar');
+
+            document.getElementById('nominal-kembalian').innerText =
+                formatRupiah(Math.max(0, kembalian));
+
+            const uangKurang = nominalBayar < total;
+
+            if (uangKurang && nominalBayar > 0) {
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
+            }
+
+            btnBayar.disabled =
+                cart.length === 0 ||
+                nominalBayar < total ||
+                nominalBayar <= 0;
+        }
+
+
+        // ==========================================
+        // SIMPAN DATA STRUK
+        // ==========================================
+
+        function simpanDataStruk() {
+
+            const metode = document.getElementById('payment-method').value;
+
+            const total = getTotalHarga();
+
+            const bayar = metode === 'Tunai'
+                ? Number(document.getElementById('nominal-bayar').value) || 0
+                : total;
+
+            lastTransactionData = {
+
+                items: cart.map(item => ({
+                    nama: item.Nama_Menu,
+                    harga: Number(item.Harga),
+                    qty: item.qty,
+                    subtotal: Number(item.Harga) * item.qty
+                })),
+
+                total: total,
+                bayar: bayar,
+
+                kembalian: metode === 'Tunai'
+                    ? bayar - total
+                    : 0,
+
+                metode: metode,
+
+                catatan: document.getElementById('order-note').value || '-',
+
+                waktu: new Date().toLocaleString('id-ID', {
+                    timeZone: 'Asia/Jakarta'
+                }),
+
+                kasir: namaKasir || 'Kasir'
+            };
         }
 
 
@@ -539,28 +624,36 @@
 
         async function prosesBayar() {
 
-            if (cart.length === 0) return;
-
             const btn = document.getElementById('btn-bayar');
 
+            const detailString = cart.map(i => {
+                return `${i.Nama_Menu} (x${i.qty})`;
+            }).join(", ");
+
+            const totalHarga = getTotalHarga();
+
+            const metodeBayar = document.getElementById('payment-method').value;
+
+            const nominalDibayar = Number(
+                document.getElementById('nominal-bayar').value
+            ) || 0;
+
+            const catatan = document.getElementById('order-note').value;
+
+            if (cart.length === 0) {
+                alert('Keranjang masih kosong.');
+                return;
+            }
+
+            // Validasi pembayaran tunai
+            if (metodeBayar === 'Tunai' && nominalDibayar < totalHarga) {
+                alert('Nominal pembayaran kurang dari total belanja.');
+                hitungKembalian();
+                return;
+            }
+
             btn.innerText = "Memproses...";
-
             btn.disabled = true;
-
-            const detailString = cart
-                .map(i => `${i.Nama_Menu} (x${i.qty})`)
-                .join(", ");
-
-            const totalHarga = cart.reduce(
-                (sum, i) => sum + (i.Harga * i.qty),
-                0
-            );
-
-            const metodeBayar =
-                document.getElementById('payment-method').value;
-
-            const catatan =
-                document.getElementById('order-note').value;
 
             const payload = {
                 action: "add_transaksi",
@@ -581,33 +674,18 @@
 
                 if (result.status === "success") {
 
-                    // Simpan data untuk cetak nota
-                    lastTransactionData = {
+                    // Simpan data struk sebelum keranjang dikosongkan
+                    simpanDataStruk();
 
-                        items: [...cart],
-
-                        total: totalHarga,
-
-                        metode: metodeBayar,
-
-                        catatan: catatan || "-",
-
-                        waktu: new Date().toLocaleString(
-                            'id-ID',
-                            { timeZone: 'Asia/Jakarta' }
-                        ),
-
-                        kasir: namaKasir
-
-                    };
-
-                    // Tampilkan modal sukses
+                    // Tampilkan modal transaksi sukses
                     bukaModalSukses();
 
-                    // Kosongkan keranjang
+                    // Reset keranjang
                     cart = [];
 
-                    document.getElementById('order-note').value = "";
+                    document.getElementById('order-note').value = '';
+                    document.getElementById('nominal-bayar').value = '';
+                    document.getElementById('nominal-kembalian').innerText = 'Rp 0';
 
                     renderCart();
 
@@ -619,106 +697,138 @@
 
             } catch (err) {
 
+                console.error(err);
+
                 alert("Terjadi kesalahan koneksi ke server.");
 
             } finally {
 
                 btn.innerText = "Proses Pembayaran";
 
-                btn.disabled = false;
+                btn.disabled = cart.length === 0;
+
+                if (cart.length > 0) {
+                    aturMetodePembayaran();
+                }
 
             }
         }
 
 
         // ==========================================
-        // BUKA MODAL SUKSES
+        // MODAL TRANSAKSI SUKSES
         // ==========================================
 
-        window.bukaModalSukses = function() {
+        function bukaModalSukses() {
 
-            const modal = document.getElementById('modal-success');
-
-            if (!modal) return;
-
-            modal.style.display = 'flex';
+            document.getElementById('modal-success').classList.add('show');
 
             document.body.style.overflow = 'hidden';
+        }
 
-        };
+        function tutupModalSukses() {
 
-
-        // ==========================================
-        // TUTUP MODAL SUKSES
-        // ==========================================
-
-        window.tutupModalSukses = function() {
-
-            const modal = document.getElementById('modal-success');
-
-            if (!modal) return;
-
-            modal.style.display = 'none';
+            document.getElementById('modal-success').classList.remove('show');
 
             document.body.style.overflow = '';
-
-        };
+        }
 
 
         // ==========================================
-        // CETAK NOTA
+        // CETAK STRUK
         // ==========================================
 
         function cetakNota() {
 
-            if (!lastTransactionData) return;
+            if (!lastTransactionData) {
+                alert('Data struk tidak ditemukan.');
+                return;
+            }
 
-            document.getElementById('struk-waktu').innerText =
-                `Waktu: ${lastTransactionData.waktu}`;
+            const data = lastTransactionData;
 
-            document.getElementById('struk-kasir').innerText =
-                `Kasir: ${lastTransactionData.kasir}`;
+            let daftarItem = '';
 
-            document.getElementById('struk-catatan').innerText =
-                `Catatan: ${lastTransactionData.catatan}`;
+            data.items.forEach(item => {
 
-            document.getElementById('struk-total').innerText =
-                `Rp ${Number(lastTransactionData.total).toLocaleString('id-ID')}`;
+                daftarItem += `
+                    <div style="margin-bottom:8px;">
+                        <div>${item.nama}</div>
 
-            document.getElementById('struk-metode').innerText =
-                `Bayar: ${lastTransactionData.metode}`;
-
-            let itemsHtml = '';
-
-            lastTransactionData.items.forEach(item => {
-
-                itemsHtml += `
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                        <span>${item.Nama_Menu} x${item.qty}</span>
-                        <span>Rp ${(item.Harga * item.qty).toLocaleString('id-ID')}</span>
+                        <div class="receipt-row">
+                            <span>${item.qty} x ${formatRupiah(item.harga)}</span>
+                            <span>${formatRupiah(item.subtotal)}</span>
+                        </div>
                     </div>
                 `;
 
             });
 
-            document.getElementById('struk-items').innerHTML =
-                itemsHtml;
+            document.getElementById('print-area').innerHTML = `
 
-            // Tutup modal sebelum membuka dialog cetak
+                <div class="receipt-center">
+
+                    <h2 style="font-size:18px;font-weight:bold;margin-bottom:4px;">
+                        KAFE SATHENG
+                    </h2>
+
+                    <div>Struk Pembayaran</div>
+
+                </div>
+
+                <div class="receipt-divider"></div>
+
+                <div>Tanggal: ${data.waktu}</div>
+                <div>Kasir: ${data.kasir}</div>
+                <div>Metode: ${data.metode}</div>
+
+                <div class="receipt-divider"></div>
+
+                ${daftarItem}
+
+                <div class="receipt-divider"></div>
+
+                <div class="receipt-row">
+                    <strong>TOTAL</strong>
+                    <strong>${formatRupiah(data.total)}</strong>
+                </div>
+
+                <div class="receipt-row">
+                    <span>Bayar</span>
+                    <span>${formatRupiah(data.bayar)}</span>
+                </div>
+
+                <div class="receipt-row">
+                    <strong>Kembalian</strong>
+                    <strong>${formatRupiah(data.kembalian)}</strong>
+                </div>
+
+                ${data.catatan !== '-' ? `
+                    <div class="receipt-divider"></div>
+                    <div>Catatan: ${data.catatan}</div>
+                ` : ''}
+
+                <div class="receipt-divider"></div>
+
+                <div class="receipt-center" style="margin-top:12px;">
+                    Terima kasih atas kunjungan Anda
+                    <br>
+                    Selamat menikmati!
+                </div>
+
+            `;
+
             tutupModalSukses();
 
-            setTimeout(() => {
-
-                window.print();
-
-            }, 300);
-
+            window.print();
         }
 
 
         // ==========================================
         // MULAI APLIKASI
         // ==========================================
+
+        aturMetodePembayaran();
 
         loadMenu();
 
