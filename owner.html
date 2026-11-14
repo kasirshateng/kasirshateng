@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Dashboard - SATHENG POS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <div class="max-w-6xl mx-auto p-6 space-y-6">
+        <!-- Header -->
+        <div class="bg-amber-900 text-white p-6 rounded-2xl shadow flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">📊 Dashboard Owner - Kafe SATHENG</h1>
+                <p class="text-amber-200 text-sm mt-1" id="owner-info">Pantau omzet, laporan bulanan, dan kelola menu kafe.</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="loadData()" class="bg-amber-800 hover:bg-amber-700 px-4 py-2 rounded-lg text-sm font-semibold transition">Muat Ulang</button>
+                <button onclick="logout()" class="bg-red-700 hover:bg-red-800 px-4 py-2 rounded-lg text-sm font-semibold transition">Keluar</button>
+            </div>
+        </div>
+
+        <!-- Kartu Ringkasan Omzet -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <p class="text-sm font-semibold text-gray-500">Total Omzet Bulan Ini</p>
+                <h3 class="text-3xl font-extrabold text-amber-900 mt-2" id="omzet-bulan-ini">Rp 0</h3>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <p class="text-sm font-semibold text-gray-500">Jumlah Transaksi Bulan Ini</p>
+                <h3 class="text-3xl font-extrabold text-gray-800 mt-2" id="trx-bulan-ini">0</h3>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <p class="text-sm font-semibold text-gray-500">Total Keseluruhan Omzet</p>
+                <h3 class="text-3xl font-extrabold text-emerald-700 mt-2" id="omzet-total">Rp 0</h3>
+            </div>
+        </div>
+
+        <!-- Kelola Menu -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-800">Daftar Menu Kafe</h2>
+                <button onclick="bukaModalMenu()" class="bg-amber-900 hover:bg-amber-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">+ Tambah Menu Baru</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b bg-gray-50 text-xs font-bold text-gray-600 uppercase">
+                            <th class="p-3">ID</th>
+                            <th class="p-3">Nama Menu</th>
+                            <th class="p-3">Kategori</th>
+                            <th class="p-3">Harga</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabel-menu" class="text-sm text-gray-700">
+                        <tr><td colspan="6" class="p-4 text-center text-gray-400">Memuat data menu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Riwayat Transaksi & Laporan Bulanan -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h2 class="text-lg font-bold text-gray-800">Riwayat Transaksi & Laporan Bulanan</h2>
+                <div>
+                    <label class="text-xs font-semibold text-gray-600 mr-2">Filter Bulan:</label>
+                    <select id="filter-bulan" onchange="renderTransaksi()" class="border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
+                        <option value="all">Semua Bulan</option>
+                    </select>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b bg-gray-50 text-xs font-bold text-gray-600 uppercase">
+                            <th class="p-3">ID Transaksi</th>
+                            <th class="p-3">Waktu (WIB)</th>
+                            <th class="p-3">Detail Item</th>
+                            <th class="p-3">Metode</th>
+                            <th class="p-3">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabel-transaksi" class="text-sm text-gray-700">
+                        <tr><td colspan="5" class="p-4 text-center text-gray-400">Memuat data transaksi...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah/Edit Menu -->
+    <div id="modal-menu" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-md space-y-4 shadow-xl">
+            <h3 id="modal-title" class="text-lg font-bold text-gray-800">Tambah Menu Baru</h3>
+            <input type="hidden" id="edit-id-menu">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Menu:</label>
+                <input type="text" id="input-nama" placeholder="Contoh: Kopi Susu Satheng" class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-900 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Kategori:</label>
+                <select id="input-kategori" class="w-full border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
+                    <option value="Coffee">Coffee</option>
+                    <option value="Non-Coffee">Non-Coffee</option>
+                    <option value="Main Course">Main Course</option>
+                    <option value="Snack">Snack</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Harga (Rp):</label>
+                <input type="number" id="input-harga" placeholder="Contoh: 18000" class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-900 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Status:</label>
+                <select id="input-status" class="w-full border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
+                    <option value="Tersedia">Tersedia</option>
+                    <option value="Habis">Habis</option>
+                </select>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="tutupModalMenu()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300">Batal</button>
+                <button onclick="simpanMenu()" id="btn-simpan-menu" class="px-4 py-2 bg-amber-900 text-white rounded-lg text-sm font-semibold hover:bg-amber-800">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cek Keamanan Sesi Login & Peran Owner
+        if (localStorage.getItem("satheng_role") !== "owner") {
+            window.location.href = "index.html";
+        }
+
+        const namaOwner = localStorage.getItem("satheng_nama");
+        if (namaOwner) {
+            document.getElementById('owner-info').innerText = `Selamat datang, ${namaOwner}! Pantau omzet dan kelola menu kafe.`;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+
+        const API_URL = "https://script.google.com/macros/s/AKfycbzOj-GNILFwpKfAF1bnYT0YVyM4mOBzkdWM7qTrDryqFLVCj5w6ym_L3Xf-VanZPZ-9yg/exec";
+        let globalMenu = [];
+        let globalTransaksi = [];
+
+        async function loadData() {
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                globalMenu = data.menu || [];
+                globalTransaksi = data.transaksi || [];
+                
+                renderMenuTable();
+                populateFilterBulan();
+                renderTransaksi();
+                hitungRingkasan();
+            } catch (err) {
+                alert("Gagal memuat data dari database.");
+            }
+        }
+
+        function renderMenuTable() {
+            const tbody = document.getElementById('tabel-menu');
+            if(globalMenu.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Belum ada menu di database.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            globalMenu.forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 font-semibold">${item.ID_Menu}</td>
+                        <td class="p-3">${item.Nama_Menu}</td>
+                        <td class="p-3"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${item.Kategori}</span></td>
+                        <td class="p-3">Rp ${Number(item.Harga).toLocaleString('id-ID')}</td>
+                        <td class="p-3"><span class="${item.Status === 'Tersedia' ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'} px-2 py-1 rounded text-xs font-semibold">${item.Status}</span></td>
+                        <td class="p-3 text-center space-x-2">
+                            <button onclick='editMenu("${item.ID_Menu}")' class="text-blue-600 hover:underline text-xs font-semibold">Edit</button>
+                            <button onclick='hapusMenu("${item.ID_Menu}")' class="text-red-600 hover:underline text-xs font-semibold">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function populateFilterBulan() {
+            const select = document.getElementById('filter-bulan');
+            const bulanSet = new Set();
+            globalTransaksi.forEach(t => {
+                if(t.Bulan_Tahun) bulanSet.add(t.Bulan_Tahun);
+            });
+
+            const currentVal = select.value;
+            select.innerHTML = '<option value="all">Semua Bulan</option>';
+            Array.from(bulanSet).sort().reverse().forEach(b => {
+                select.innerHTML += `<option value="${b}">${b}</option>`;
+            });
+            select.value = currentVal;
+        }
+
+        function formatWaktuWIB(utcString) {
+            if (!utcString) return "-";
+            const date = new Date(utcString);
+            if (isNaN(date.getTime())) return utcString; 
+
+            return date.toLocaleString('id-ID', {
+                timeZone: 'Asia/Jakarta',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).replace(/\./g, ':');
+        }
+
+        function renderTransaksi() {
+            const tbody = document.getElementById('tabel-transaksi');
+            const filter = document.getElementById('filter-bulan').value;
+            
+            let filtered = globalTransaksi;
+            if(filter !== 'all') {
+                filtered = globalTransaksi.filter(t => t.Bulan_Tahun === filter);
+            }
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Tidak ada transaksi pada periode ini.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            filtered.forEach(t => {
+                const waktuWIB = formatWaktuWIB(t.Waktu);
+
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 font-mono text-xs">${t.ID_Transaksi}</td>
+                        <td class="p-3 text-xs font-medium text-gray-600">${waktuWIB} WIB</td>
+                        <td class="p-3">${t.Detail_Item}</td>
+                        <td class="p-3"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${t.Metode_Bayar}</span></td>
+                        <td class="p-3 font-bold text-amber-900">Rp ${Number(t.Total_Harga).toLocaleString('id-ID')}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function hitungRingkasan() {
+            const now = new Date();
+            const currentMonth = now.toISOString().slice(0, 7);
+
+            let omzetBulanIni = 0;
+            let trxBulanIni = 0;
+            let omzetTotal = 0;
+
+            globalTransaksi.forEach(t => {
+                const harga = Number(t.Total_Harga) || 0;
+                omzetTotal += harga;
+                if(t.Bulan_Tahun === currentMonth) {
+                    omzetBulanIni += harga;
+                    trxBulanIni += 1;
+                }
+            });
+
+            document.getElementById('omzet-bulan-ini').innerText = `Rp ${omzetBulanIni.toLocaleString('id-ID')}`;
+            document.getElementById('trx-bulan-ini').innerText = trxBulanIni;
+            document.getElementById('omzet-total').innerText = `Rp ${omzetTotal.toLocaleString('id-ID')}`;
+        }
+
+        function bukaModalMenu() {
+            document.getElementById('modal-title').innerText = "Tambah Menu Baru";
+            document.getElementById('edit-id-menu').value = "";
+            document.getElementById('input-nama').value = "";
+            document.getElementById('input-harga').value = "";
+            document.getElementById('input-status').value = "Tersedia";
+            document.getElementById('modal-menu').classList.remove('hidden');
+        }
+
+        function tutupModalMenu() {
+            document.getElementById('modal-menu').classList.add('hidden');
+        }
+
+        function editMenu(id) {
+            const item = globalMenu.find(m => m.ID_Menu === id);
+            if(!item) return;
+            document.getElementById('modal-title').innerText = "Edit Menu";
+            document.getElementById('edit-id-menu').value = item.ID_Menu;
+            document.getElementById('input-nama').value = item.Nama_Menu;
+            document.getElementById('input-kategori').value = item.Kategori;
+            document.getElementById('input-harga').value = item.Harga;
+            document.getElementById('input-status').value = item.Status;
+            document.getElementById('modal-menu').classList.remove('hidden');
+        }
+
+        async function simpanMenu() {
+            const id = document.getElementById('edit-id-menu').value;
+            const nama = document.getElementById('input-nama').value;
+            const kategori = document.getElementById('input-kategori').value;
+            const harga = document.getElementById('input-harga').value;
+            const status = document.getElementById('input-status').value;
+            const btnSimpan = document.getElementById('btn-simpan-menu');
+
+            if(!nama || !harga) {
+                alert("Nama dan harga wajib diisi!");
+                return;
+            }
+
+            btnSimpan.innerText = "Menyimpan...";
+            btnSimpan.disabled = true;
+
+            const action = id ? "update_menu" : "add_menu";
+            const payload = { action, id_menu: id, nama_menu: nama, kategori, harga, status };
+
+            try {
+                const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                const result = await res.json();
+                if(result.status === "success") {
+                    tutupModalMenu();
+                    loadData();
+                } else {
+                    alert("Gagal menyimpan menu.");
+                }
+            } catch (err) {
+                alert("Terjadi kesalahan koneksi.");
+            } finally {
+                btnSimpan.innerText = "Simpan";
+                btnSimpan.disabled = false;
+            }
+        }
+
+        async function hapusMenu(id) {
+            if(!confirm("Yakin ingin menghapus menu ini?")) return;
+            try {
+                const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "delete_menu", id_menu: id }) });
+                const result = await res.json();
+                if(result.status === "success") {
+                    loadData();
+                } else {
+                    alert("Gagal menghapus menu.");
+                }
+            } catch (err) {
+                alert("Terjadi kesalahan koneksi.");
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
