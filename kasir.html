@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -6,21 +7,25 @@
     <title>Kasir - SATHENG POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
+
     <style>
-        /* Pengaturan khusus saat mencetak struk ke printer eksternal */
+        /* Pengaturan cetak nota */
         @media print {
             body * {
-                visibility: hidden;
+                visibility: hidden !important;
             }
-            #print-area, #print-area * {
-                visibility: visible;
+
+            #print-area,
+            #print-area * {
+                visibility: visible !important;
             }
+
             #print-area {
                 display: block !important;
                 position: absolute;
                 left: 0;
                 top: 0;
-                width: 58mm; /* Sesuaikan dengan ukuran kertas printer (58mm atau 80mm) */
+                width: 58mm;
                 font-family: 'Courier New', Courier, monospace;
                 font-size: 11px;
                 color: black;
@@ -28,239 +33,534 @@
                 background: white;
             }
         }
+
+        /* Modal sukses */
+        #modal-success {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            background: rgba(0, 0, 0, .55);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+            pointer-events: auto;
+        }
+
+        #modal-success .modal-content {
+            width: 100%;
+            max-width: 380px;
+            max-height: calc(100dvh - 32px);
+            overflow-y: auto;
+            padding: 24px;
+            background: white;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+            pointer-events: auto;
+        }
+
+        #modal-success button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 48px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 640px) {
+            #modal-success {
+                padding: 16px;
+            }
+
+            #modal-success .modal-content {
+                padding: 22px;
+            }
+        }
     </style>
 </head>
+
 <body class="bg-gray-100 font-sans antialiased">
 
     <div class="flex h-screen overflow-hidden">
-        <!-- Bagian Kiri: Katalog Menu -->
+
+        <!-- KATALOG MENU -->
         <div class="w-3/5 flex flex-col border-r border-gray-200 bg-white">
+
             <header class="bg-amber-900 text-white p-4 flex justify-between items-center shadow">
                 <div class="flex items-center space-x-3">
                     <h1 class="text-xl font-bold">☕ KAFE SATHENG - Kasir</h1>
-                    <span id="loader-status" class="text-xs bg-amber-800 px-2 py-1 rounded">Memuat Menu...</span>
+
+                    <span id="loader-status"
+                        class="text-xs bg-amber-800 px-2 py-1 rounded">
+                        Memuat Menu...
+                    </span>
                 </div>
-                <button onclick="logout()" class="bg-red-700 hover:bg-red-800 text-xs px-3 py-1.5 rounded font-semibold transition">Keluar</button>
+
+                <button
+                    type="button"
+                    onclick="logout()"
+                    class="bg-red-700 hover:bg-red-800 text-xs px-3 py-1.5 rounded font-semibold transition">
+                    Keluar
+                </button>
             </header>
-            <div class="p-4 overflow-y-auto flex-1 grid grid-cols-3 gap-3" id="menu-container">
-                <!-- Menu dimuat otomatis dari Google Sheets -->
+
+            <div
+                class="p-4 overflow-y-auto flex-1 grid grid-cols-3 gap-3"
+                id="menu-container">
+                <!-- Menu dimuat otomatis -->
             </div>
+
         </div>
 
-        <!-- Bagian Kanan: Keranjang & Pembayaran -->
+        <!-- KERANJANG DAN PEMBAYARAN -->
         <div class="w-2/5 flex flex-col bg-gray-50">
+
             <div class="p-4 bg-white border-b border-gray-200 shadow-sm flex justify-between items-center">
-                <h2 class="text-lg font-bold text-gray-800">Keranjang Pesanan</h2>
-                <span id="kasir-nama" class="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">Kasir</span>
+                <h2 class="text-lg font-bold text-gray-800">
+                    Keranjang Pesanan
+                </h2>
+
+                <span
+                    id="kasir-nama"
+                    class="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                    Kasir
+                </span>
             </div>
-            
-            <div class="flex-1 overflow-y-auto p-4 space-y-2" id="cart-items">
-                <p class="text-gray-400 text-center py-10">Keranjang masih kosong</p>
+
+            <div
+                class="flex-1 overflow-y-auto p-4 space-y-2"
+                id="cart-items">
+
+                <p class="text-gray-400 text-center py-10">
+                    Keranjang masih kosong
+                </p>
+
             </div>
 
             <div class="p-4 bg-white border-t border-gray-200 shadow-lg space-y-3">
+
                 <div class="flex justify-between text-lg font-bold text-gray-800">
                     <span>Total:</span>
                     <span id="grand-total">Rp 0</span>
                 </div>
-                
+
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Metode Pembayaran:</label>
-                    <select id="payment-method" class="w-full border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">
+                        Metode Pembayaran:
+                    </label>
+
+                    <select
+                        id="payment-method"
+                        class="w-full border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
+
                         <option value="Tunai">Tunai</option>
                         <option value="QRIS">QRIS</option>
                         <option value="Transfer">Transfer</option>
+
                     </select>
                 </div>
 
                 <div>
-                    <input type="text" id="order-note" placeholder="Catatan pesanan (misal: Meja 5)" class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-900 outline-none">
+                    <input
+                        type="text"
+                        id="order-note"
+                        placeholder="Catatan pesanan (misal: Meja 5)"
+                        class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-900 outline-none">
                 </div>
 
-                <button onclick="prosesBayar()" id="btn-bayar" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow transition disabled:opacity-50" disabled>
+                <button
+                    type="button"
+                    onclick="prosesBayar()"
+                    id="btn-bayar"
+                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow transition disabled:opacity-50"
+                    disabled>
+
                     Proses Pembayaran
+
                 </button>
+
             </div>
         </div>
     </div>
 
-    <!-- Modal Sukses Transaksi dengan Pilihan Cetak Nota -->
-    <div id="modal-success" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 p-4">
-        <div class="bg-white p-6 rounded-2xl w-full max-w-sm text-center space-y-4 shadow-2xl transform transition-all">
+    <!-- MODAL SUKSES -->
+    <div id="modal-success">
+
+        <div class="modal-content">
+
             <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
                 ✓
             </div>
-            <div>
-                <h3 class="text-xl font-bold text-gray-800">Transaksi Berhasil!</h3>
-                <p class="text-xs text-gray-500 mt-1">Data pesanan telah tercatat. Ingin mencetak struk nota?</p>
+
+            <div class="mt-4">
+                <h3 class="text-xl font-bold text-gray-800">
+                    Transaksi Berhasil!
+                </h3>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Data pesanan telah tercatat. Ingin mencetak struk nota?
+                </p>
             </div>
-            <div class="flex flex-col space-y-2 pt-2">
-                <button onclick="cetakNota()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow transition text-sm flex items-center justify-center gap-2">
-                    <span>🖨️</span> Cetak Nota Sekarang
+
+            <div class="flex flex-col space-y-2 pt-4">
+
+                <button
+                    type="button"
+                    onclick="cetakNota()"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 shadow transition text-sm gap-2">
+
+                    <span>🖨️</span>
+                    Cetak Nota Sekarang
+
                 </button>
-                <button onclick="tutupModalSukses()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl transition text-sm">
+
+                <button
+                    type="button"
+                    id="btn-kembali-menu"
+                    onclick="window.tutupModalSukses()"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 transition text-sm">
+
                     Tidak, Kembali ke Menu
+
                 </button>
+
             </div>
         </div>
     </div>
 
-    <!-- Area Cetak Struk (Tersembunyi di layar, muncul hanya saat diprint) -->
+    <!-- AREA CETAK NOTA -->
     <div id="print-area" class="hidden">
+
         <div style="text-align: center; margin-bottom: 8px;">
-            <h3 style="font-weight: bold; font-size: 14px; margin: 0;">KAFE SATHENG</h3>
-            <p style="font-size: 10px; margin: 2px 0;">Struk Pembayaran Kasir</p>
+            <h3 style="font-weight: bold; font-size: 14px; margin: 0;">
+                KAFE SATHENG
+            </h3>
+
+            <p style="font-size: 10px; margin: 2px 0;">
+                Struk Pembayaran Kasir
+            </p>
         </div>
+
         <div style="border-bottom: 1px dashed black; margin-bottom: 6px;"></div>
+
         <div style="font-size: 10px; line-height: 1.4;">
             <p style="margin: 0;" id="struk-waktu">Waktu: -</p>
             <p style="margin: 0;" id="struk-kasir">Kasir: -</p>
             <p style="margin: 0;" id="struk-catatan">Catatan: -</p>
         </div>
+
         <div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>
-        
-        <!-- Daftar Item -->
+
         <div id="struk-items" style="font-size: 10px; line-height: 1.4;"></div>
 
         <div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>
+
         <div style="font-size: 11px; font-weight: bold;">
+
             <div style="display: flex; justify-content: space-between;">
                 <span>TOTAL:</span>
                 <span id="struk-total">Rp 0</span>
             </div>
+
             <div style="display: flex; justify-content: space-between; font-weight: normal; font-size: 10px; margin-top: 2px;">
                 <span id="struk-metode">Metode: Tunai</span>
                 <span>LUNAS</span>
             </div>
+
         </div>
+
         <div style="border-bottom: 1px dashed black; margin: 6px 0;"></div>
+
         <div style="text-align: center; font-size: 9px; margin-top: 8px;">
-            <p style="margin: 0;">Terima Kasih Atas Kunjungan Anda!</p>
-            <p style="margin: 2px 0;">~ Kafe SATHENG ~</p>
+            <p style="margin: 0;">
+                Terima Kasih Atas Kunjungan Anda!
+            </p>
+
+            <p style="margin: 2px 0;">
+                ~ Kafe SATHENG ~
+            </p>
         </div>
+
     </div>
 
     <script>
-        // Cek Keamanan Sesi Login & Peran
+
+        // ==========================================
+        // KEAMANAN LOGIN
+        // ==========================================
+
         if (localStorage.getItem("satheng_role") !== "kasir") {
             window.location.href = "index.html";
         }
 
         const namaKasir = localStorage.getItem("satheng_nama") || "Kasir";
-        document.getElementById('kasir-nama').innerText = `Kasir: ${namaKasir}`;
+
+        document.getElementById('kasir-nama').innerText =
+            `Kasir: ${namaKasir}`;
 
         function logout() {
             localStorage.clear();
             window.location.href = "index.html";
         }
 
+
+        // ==========================================
+        // KONFIGURASI API
+        // ==========================================
+
         const API_URL = "https://script.google.com/macros/s/AKfycbzOj-GNILFwpKfAF1bnYT0YVyM4mOBzkdWM7qTrDryqFLVCj5w6ym_L3Xf-VanZPZ-9yg/exec";
+
         let menuList = [];
         let cart = [];
-        let lastTransactionData = null; // Menyimpan data transaksi terakhir untuk keperluan cetak nota
+        let lastTransactionData = null;
+
+
+        // ==========================================
+        // MEMUAT MENU
+        // ==========================================
 
         async function loadMenu() {
+
             try {
+
                 const res = await fetch(`${API_URL}?action=menu`);
+
                 menuList = await res.json();
+
                 renderMenu();
+
                 document.getElementById('loader-status').innerText = 'Online';
-                document.getElementById('loader-status').className = 'text-xs bg-emerald-700 px-2 py-1 rounded';
+
+                document.getElementById('loader-status').className =
+                    'text-xs bg-emerald-700 px-2 py-1 rounded';
+
             } catch (err) {
-                document.getElementById('loader-status').innerText = 'Gagal Memuat';
-                document.getElementById('loader-status').className = 'text-xs bg-red-700 px-2 py-1 rounded';
+
+                document.getElementById('loader-status').innerText =
+                    'Gagal Memuat';
+
+                document.getElementById('loader-status').className =
+                    'text-xs bg-red-700 px-2 py-1 rounded';
+
             }
         }
 
+
+        // ==========================================
+        // MENAMPILKAN MENU
+        // ==========================================
+
         function renderMenu() {
+
             const container = document.getElementById('menu-container');
+
             container.innerHTML = '';
-            
+
             if (menuList.length === 0) {
-                container.innerHTML = '<p class="text-gray-400 text-sm col-span-3 text-center py-10">Belum ada menu di database.</p>';
+
+                container.innerHTML =
+                    '<p class="text-gray-400 text-sm col-span-3 text-center py-10">Belum ada menu di database.</p>';
+
                 return;
             }
 
             menuList.forEach(item => {
-                if(item.Status !== "Tersedia") return;
+
+                if (item.Status !== "Tersedia") return;
+
                 container.innerHTML += `
-                    <div onclick='tambahKeKeranjang("${item.ID_Menu}")' class="bg-white border rounded-xl p-3 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between transition border-amber-100 hover:border-amber-400">
+                    <div
+                        onclick='tambahKeKeranjang("${item.ID_Menu}")'
+                        class="bg-white border rounded-xl p-3 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between transition border-amber-100 hover:border-amber-400">
+
                         <div>
-                            <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">${item.Kategori}</span>
-                            <h3 class="font-bold text-gray-800 mt-2 text-sm leading-snug">${item.Nama_Menu}</h3>
+                            <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">
+                                ${item.Kategori}
+                            </span>
+
+                            <h3 class="font-bold text-gray-800 mt-2 text-sm leading-snug">
+                                ${item.Nama_Menu}
+                            </h3>
                         </div>
-                        <p class="text-amber-900 font-extrabold mt-3 text-sm">Rp ${Number(item.Harga).toLocaleString('id-ID')}</p>
+
+                        <p class="text-amber-900 font-extrabold mt-3 text-sm">
+                            Rp ${Number(item.Harga).toLocaleString('id-ID')}
+                        </p>
+
                     </div>
                 `;
+
             });
         }
 
+
+        // ==========================================
+        // TAMBAH KE KERANJANG
+        // ==========================================
+
         function tambahKeKeranjang(id) {
+
             const produk = menuList.find(m => m.ID_Menu === id);
+
+            if (!produk) return;
+
             const itemExist = cart.find(i => i.ID_Menu === id);
-            if(itemExist) {
+
+            if (itemExist) {
+
                 itemExist.qty += 1;
+
             } else {
-                cart.push({ ...produk, qty: 1 });
+
+                cart.push({
+                    ...produk,
+                    qty: 1
+                });
+
             }
+
             renderCart();
         }
+
+
+        // ==========================================
+        // UBAH JUMLAH ITEM
+        // ==========================================
 
         function ubahQty(id, delta) {
+
             const item = cart.find(i => i.ID_Menu === id);
-            if(item) {
+
+            if (item) {
+
                 item.qty += delta;
-                if(item.qty <= 0) {
+
+                if (item.qty <= 0) {
+
                     cart = cart.filter(i => i.ID_Menu !== id);
+
                 }
             }
+
             renderCart();
         }
 
+
+        // ==========================================
+        // MENAMPILKAN KERANJANG
+        // ==========================================
+
         function renderCart() {
+
             const container = document.getElementById('cart-items');
+
             const btnBayar = document.getElementById('btn-bayar');
-            
-            if(cart.length === 0) {
-                container.innerHTML = '<p class="text-gray-400 text-center py-10">Keranjang masih kosong</p>';
+
+            if (cart.length === 0) {
+
+                container.innerHTML =
+                    '<p class="text-gray-400 text-center py-10">Keranjang masih kosong</p>';
+
                 document.getElementById('grand-total').innerText = 'Rp 0';
+
                 btnBayar.disabled = true;
+
                 return;
             }
 
             container.innerHTML = '';
+
             let total = 0;
+
             cart.forEach(item => {
+
                 const subtotal = item.Harga * item.qty;
+
                 total += subtotal;
+
                 container.innerHTML += `
                     <div class="flex justify-between items-center bg-white p-3 rounded-lg border shadow-sm">
+
                         <div class="flex-1">
-                            <h4 class="font-bold text-sm text-gray-800">${item.Nama_Menu}</h4>
-                            <p class="text-xs text-gray-500">Rp ${Number(item.Harga).toLocaleString('id-ID')} x ${item.qty}</p>
+                            <h4 class="font-bold text-sm text-gray-800">
+                                ${item.Nama_Menu}
+                            </h4>
+
+                            <p class="text-xs text-gray-500">
+                                Rp ${Number(item.Harga).toLocaleString('id-ID')} x ${item.qty}
+                            </p>
                         </div>
+
                         <div class="flex items-center space-x-2">
-                            <button onclick="ubahQty('${item.ID_Menu}', -1)" class="bg-gray-200 px-2 py-1 rounded text-xs font-bold w-6 h-6 flex items-center justify-center">-</button>
-                            <span class="text-sm font-bold w-6 text-center">${item.qty}</span>
-                            <button onclick="ubahQty('${item.ID_Menu}', 1)" class="bg-gray-200 px-2 py-1 rounded text-xs font-bold w-6 h-6 flex items-center justify-center">+</button>
+
+                            <button
+                                type="button"
+                                onclick="ubahQty('${item.ID_Menu}', -1)"
+                                class="bg-gray-200 px-2 py-1 rounded text-xs font-bold w-6 h-6 flex items-center justify-center">
+                                -
+                            </button>
+
+                            <span class="text-sm font-bold w-6 text-center">
+                                ${item.qty}
+                            </span>
+
+                            <button
+                                type="button"
+                                onclick="ubahQty('${item.ID_Menu}', 1)"
+                                class="bg-gray-200 px-2 py-1 rounded text-xs font-bold w-6 h-6 flex items-center justify-center">
+                                +
+                            </button>
+
                         </div>
                     </div>
                 `;
+
             });
 
-            document.getElementById('grand-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+            document.getElementById('grand-total').innerText =
+                `Rp ${total.toLocaleString('id-ID')}`;
+
             btnBayar.disabled = false;
         }
 
+
+        // ==========================================
+        // PROSES PEMBAYARAN
+        // ==========================================
+
         async function prosesBayar() {
+
+            if (cart.length === 0) return;
+
             const btn = document.getElementById('btn-bayar');
+
             btn.innerText = "Memproses...";
+
             btn.disabled = true;
 
-            const detailString = cart.map(i => `${i.Nama_Menu} (x${i.qty})`).join(", ");
-            const totalHarga = cart.reduce((sum, i) => sum + (i.Harga * i.qty), 0);
-            const metodeBayar = document.getElementById('payment-method').value;
-            const catatan = document.getElementById('order-note').value;
+            const detailString = cart
+                .map(i => `${i.Nama_Menu} (x${i.qty})`)
+                .join(", ");
+
+            const totalHarga = cart.reduce(
+                (sum, i) => sum + (i.Harga * i.qty),
+                0
+            );
+
+            const metodeBayar =
+                document.getElementById('payment-method').value;
+
+            const catatan =
+                document.getElementById('order-note').value;
 
             const payload = {
                 action: "add_transaksi",
@@ -271,73 +571,158 @@
             };
 
             try {
+
                 const res = await fetch(API_URL, {
                     method: "POST",
                     body: JSON.stringify(payload)
                 });
+
                 const result = await res.json();
-                if(result.status === "success") {
-                    // Simpan salinan transaksi terakhir sebelum keranjang di-reset
+
+                if (result.status === "success") {
+
+                    // Simpan data untuk cetak nota
                     lastTransactionData = {
+
                         items: [...cart],
+
                         total: totalHarga,
+
                         metode: metodeBayar,
+
                         catatan: catatan || "-",
-                        waktu: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
+
+                        waktu: new Date().toLocaleString(
+                            'id-ID',
+                            { timeZone: 'Asia/Jakarta' }
+                        ),
+
                         kasir: namaKasir
+
                     };
 
-                    // Tampilkan modal sukses dengan pilihan Cetak Nota
-                    document.getElementById('modal-success').classList.remove('hidden');
-                    
-                    // Reset keranjang belanja
+                    // Tampilkan modal sukses
+                    bukaModalSukses();
+
+                    // Kosongkan keranjang
                     cart = [];
+
                     document.getElementById('order-note').value = "";
+
                     renderCart();
+
                 } else {
+
                     alert("Gagal memproses transaksi.");
+
                 }
+
             } catch (err) {
+
                 alert("Terjadi kesalahan koneksi ke server.");
+
             } finally {
+
                 btn.innerText = "Proses Pembayaran";
+
                 btn.disabled = false;
+
             }
         }
 
+
+        // ==========================================
+        // BUKA MODAL SUKSES
+        // ==========================================
+
+        window.bukaModalSukses = function() {
+
+            const modal = document.getElementById('modal-success');
+
+            if (!modal) return;
+
+            modal.style.display = 'flex';
+
+            document.body.style.overflow = 'hidden';
+
+        };
+
+
+        // ==========================================
+        // TUTUP MODAL SUKSES
+        // ==========================================
+
+        window.tutupModalSukses = function() {
+
+            const modal = document.getElementById('modal-success');
+
+            if (!modal) return;
+
+            modal.style.display = 'none';
+
+            document.body.style.overflow = '';
+
+        };
+
+
+        // ==========================================
+        // CETAK NOTA
+        // ==========================================
+
         function cetakNota() {
+
             if (!lastTransactionData) return;
 
-            // Masukkan data transaksi ke template struk
-            document.getElementById('struk-waktu').innerText = `Waktu: ${lastTransactionData.waktu}`;
-            document.getElementById('struk-kasir').innerText = `Kasir: ${lastTransactionData.kasir}`;
-            document.getElementById('struk-catatan').innerText = `Catatan: ${lastTransactionData.catatan}`;
-            document.getElementById('struk-total').innerText = `Rp ${Number(lastTransactionData.total).toLocaleString('id-ID')}`;
-            document.getElementById('struk-metode').innerText = `Bayar: ${lastTransactionData.metode}`;
+            document.getElementById('struk-waktu').innerText =
+                `Waktu: ${lastTransactionData.waktu}`;
+
+            document.getElementById('struk-kasir').innerText =
+                `Kasir: ${lastTransactionData.kasir}`;
+
+            document.getElementById('struk-catatan').innerText =
+                `Catatan: ${lastTransactionData.catatan}`;
+
+            document.getElementById('struk-total').innerText =
+                `Rp ${Number(lastTransactionData.total).toLocaleString('id-ID')}`;
+
+            document.getElementById('struk-metode').innerText =
+                `Bayar: ${lastTransactionData.metode}`;
 
             let itemsHtml = '';
+
             lastTransactionData.items.forEach(item => {
+
                 itemsHtml += `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
                         <span>${item.Nama_Menu} x${item.qty}</span>
                         <span>Rp ${(item.Harga * item.qty).toLocaleString('id-ID')}</span>
                     </div>
                 `;
+
             });
-            document.getElementById('struk-items').innerHTML = itemsHtml;
 
-            // Tutup modal lalu panggil perintah print perangkat
+            document.getElementById('struk-items').innerHTML =
+                itemsHtml;
+
+            // Tutup modal sebelum membuka dialog cetak
             tutupModalSukses();
+
             setTimeout(() => {
+
                 window.print();
+
             }, 300);
+
         }
 
-        function tutupModalSukses() {
-            document.getElementById('modal-success').classList.add('hidden');
-        }
+
+        // ==========================================
+        // MULAI APLIKASI
+        // ==========================================
 
         loadMenu();
+
     </script>
+
 </body>
 </html>
