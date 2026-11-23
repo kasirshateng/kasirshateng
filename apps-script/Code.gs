@@ -56,14 +56,21 @@ function doPost(e) {
     const bulanTahun = Utilities.formatDate(now, "Asia/Jakarta", "yyyy-MM");
     const idTrx = "TRX-" + now.getTime();
 
+    const totalHarga = Number(data.total_harga) || 0;
+    const totalModal = Number(data.total_modal) || 0;
+
+    // Kolom: A ID | B Waktu | C Bulan_Tahun | D Detail_Item | E Total_Harga
+    //        F Metode_Bayar | G Catatan | H Total_Modal | I Keuntungan
     sheet.appendRow([
       idTrx,
       waktu,
       bulanTahun,
       data.detail_item,
-      Number(data.total_harga),
+      totalHarga,
       data.metode_bayar,
-      data.catatan || "-"
+      data.catatan || "-",
+      totalModal,
+      totalHarga - totalModal
     ]);
 
     return jsonResponse({ status: "success", id_transaksi: idTrx });
@@ -78,7 +85,9 @@ function doPost(e) {
       data.nama_menu,
       data.kategori,
       Number(data.harga),
-      data.status || "Tersedia"
+      data.status || "Tersedia",
+      Number(data.harga_modal) || 0,  // Kolom F: Harga_Modal
+      data.jenis || "Kafe"            // Kolom G: Jenis (Kafe / Tobacco)
     ]);
     return jsonResponse({ status: "success", id_menu: idMenu });
   }
@@ -93,6 +102,8 @@ function doPost(e) {
         sheet.getRange(i + 1, 3).setValue(data.kategori);
         sheet.getRange(i + 1, 4).setValue(Number(data.harga));
         sheet.getRange(i + 1, 5).setValue(data.status);
+        sheet.getRange(i + 1, 6).setValue(Number(data.harga_modal) || 0);
+        sheet.getRange(i + 1, 7).setValue(data.jenis || "Kafe");
         return jsonResponse({ status: "success" });
       }
     }

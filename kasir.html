@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir - SATHENG POS</title>
+    <title>Kasir - SHATENG POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
 
@@ -89,7 +89,7 @@
 
             <header class="bg-amber-900 text-white p-4 flex justify-between items-center shadow">
                 <div class="flex items-center space-x-3">
-                    <h1 class="text-xl font-bold">☕ KAFE SATHENG - Kasir</h1>
+                    <h1 class="text-xl font-bold">☕ KAFE SHATENG - Kasir</h1>
                     <span id="loader-status" class="text-xs bg-amber-800 px-2 py-1 rounded">
                         Memuat Menu...
                     </span>
@@ -101,7 +101,13 @@
                 </button>
             </header>
 
-            <div class="p-4 overflow-y-auto flex-1 grid grid-cols-3 gap-3"
+            <!-- FILTER JENIS & KATEGORI -->
+            <div class="px-4 pt-3 pb-3 border-b border-gray-200 bg-white space-y-2">
+                <div id="jenis-tabs" class="flex gap-2"></div>
+                <div id="kategori-chips" class="flex gap-2 flex-wrap"></div>
+            </div>
+
+            <div class="p-4 overflow-y-auto flex-1 grid grid-cols-3 gap-3 content-start"
                 id="menu-container">
             </div>
 
@@ -340,7 +346,56 @@
         // TAMPILKAN MENU
         // ==========================================
 
+        // Jenis menu: "Kafe" atau "Tobacco". Menu lama yang belum punya Jenis dianggap Kafe.
+        let filterJenis = 'Semua';
+        let filterKategori = 'Semua';
+
+        function jenisItem(item) {
+            return (item.Jenis && String(item.Jenis).trim()) || 'Kafe';
+        }
+
+        function setFilterJenis(jenis) {
+            filterJenis = jenis;
+            filterKategori = 'Semua';
+            renderMenu();
+        }
+
+        function setFilterKategori(kategori) {
+            filterKategori = kategori;
+            renderMenu();
+        }
+
+        function renderFilterMenu() {
+            const tersedia = menuList.filter(m => m.Status === 'Tersedia');
+
+            // Tab Jenis
+            const jenisList = ['Semua', 'Kafe', 'Tobacco'];
+            document.getElementById('jenis-tabs').innerHTML = jenisList.map(j => {
+                const aktif = j === filterJenis;
+                const jumlah = j === 'Semua' ? tersedia.length : tersedia.filter(m => jenisItem(m) === j).length;
+                return `<button onclick="setFilterJenis('${j}')"
+                    class="px-4 py-1.5 rounded-lg text-sm font-semibold transition ${aktif ? 'bg-amber-900 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
+                    ${j} <span class="text-xs opacity-70">(${jumlah})</span></button>`;
+            }).join('');
+
+            // Chip Kategori (menyesuaikan jenis yang dipilih)
+            const kategoriSet = new Set();
+            tersedia
+                .filter(m => filterJenis === 'Semua' || jenisItem(m) === filterJenis)
+                .forEach(m => { if (m.Kategori) kategoriSet.add(m.Kategori); });
+
+            const chips = ['Semua', ...Array.from(kategoriSet).sort()];
+            document.getElementById('kategori-chips').innerHTML = chips.map(k => {
+                const aktif = k === filterKategori;
+                return `<button onclick="setFilterKategori('${k.replace(/'/g, "\\'")}')"
+                    class="px-3 py-1 rounded-full text-xs font-semibold border transition ${aktif ? 'bg-amber-100 border-amber-600 text-amber-900' : 'bg-white border-gray-300 text-gray-600 hover:border-amber-400'}">
+                    ${k}</button>`;
+            }).join('');
+        }
+
         function renderMenu() {
+
+            renderFilterMenu();
             const container = document.getElementById('menu-container');
 
             container.innerHTML = '';
@@ -354,9 +409,22 @@
                 return;
             }
 
-            menuList.forEach(item => {
+            const daftarTampil = menuList.filter(item =>
+                item.Status === "Tersedia" &&
+                (filterJenis === 'Semua' || jenisItem(item) === filterJenis) &&
+                (filterKategori === 'Semua' || item.Kategori === filterKategori)
+            );
 
-                if (item.Status !== "Tersedia") return;
+            if (daftarTampil.length === 0) {
+                container.innerHTML = `
+                    <p class="text-gray-400 text-sm col-span-3 text-center py-10">
+                        Tidak ada menu pada kategori ini.
+                    </p>
+                `;
+                return;
+            }
+
+            daftarTampil.forEach(item => {
 
                 container.innerHTML += `
                     <div
@@ -364,8 +432,8 @@
                         class="bg-white border rounded-xl p-3 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between transition border-amber-100 hover:border-amber-400">
 
                         <div>
-                            <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">
-                                ${item.Kategori}
+                            <span class="text-[10px] ${jenisItem(item) === 'Tobacco' ? 'bg-stone-200 text-stone-800' : 'bg-amber-100 text-amber-800'} px-2 py-0.5 rounded font-semibold">
+                                ${jenisItem(item)} · ${item.Kategori}
                             </span>
 
                             <h3 class="font-bold text-gray-800 mt-2 text-sm leading-snug">
@@ -656,10 +724,17 @@
             btn.innerText = "Memproses...";
             btn.disabled = true;
 
+            // Modal dihitung saat transaksi, supaya laporan lama tetap akurat
+            // walaupun harga modal menu diubah di kemudian hari.
+            const totalModal = cart.reduce((sum, i) => {
+                return sum + (Number(i.Harga_Modal) || 0) * i.qty;
+            }, 0);
+
             const payload = {
                 action: "add_transaksi",
                 detail_item: detailString,
                 total_harga: totalHarga,
+                total_modal: totalModal,
                 metode_bayar: metodeBayar,
                 catatan: catatan
             };
@@ -770,7 +845,7 @@
                 <div class="receipt-center">
 
                     <h2 style="font-size:18px;font-weight:bold;margin-bottom:4px;">
-                        KAFE SATHENG
+                        KAFE SHATENG
                     </h2>
 
                     <div>Struk Pembayaran</div>

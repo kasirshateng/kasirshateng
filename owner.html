@@ -3,124 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Owner Dashboard - SATHENG POS</title>
+    <title>Owner Dashboard - SHATENG POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bg-gray-100 font-sans antialiased">
 
-    <div class="max-w-6xl mx-auto p-6 space-y-6">
-        <!-- Header -->
-        <div class="bg-amber-900 text-white p-6 rounded-2xl shadow flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold">📊 Dashboard Owner - Kafe SATHENG</h1>
-                <p class="text-amber-200 text-sm mt-1" id="owner-info">Pantau omzet, laporan bulanan, dan kelola menu kafe.</p>
-            </div>
-            <div class="flex items-center space-x-3">
-                <button onclick="loadData()" class="bg-amber-800 hover:bg-amber-700 px-4 py-2 rounded-lg text-sm font-semibold transition">Muat Ulang</button>
-                <button onclick="logout()" class="bg-red-700 hover:bg-red-800 px-4 py-2 rounded-lg text-sm font-semibold transition">Keluar</button>
-            </div>
-        </div>
+    <!-- NAVBAR -->
+    <nav class="bg-amber-900 text-white shadow sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-6">
+                <div>
+                    <h1 class="text-lg font-bold leading-tight">☕ KAFE SHATENG</h1>
+                    <p class="text-amber-200 text-xs" id="owner-info">Dashboard Owner</p>
+                </div>
 
-        <!-- Kartu Ringkasan Omzet -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                <p class="text-sm font-semibold text-gray-500">Total Omzet Bulan Ini</p>
-                <h3 class="text-3xl font-extrabold text-amber-900 mt-2" id="omzet-bulan-ini">Rp 0</h3>
-            </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                <p class="text-sm font-semibold text-gray-500">Jumlah Transaksi Bulan Ini</p>
-                <h3 class="text-3xl font-extrabold text-gray-800 mt-2" id="trx-bulan-ini">0</h3>
-            </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                <p class="text-sm font-semibold text-gray-500">Total Keseluruhan Omzet</p>
-                <h3 class="text-3xl font-extrabold text-emerald-700 mt-2" id="omzet-total">Rp 0</h3>
-            </div>
-        </div>
-
-        <!-- Kelola Menu -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4">
-            <div class="flex justify-between items-center">
-                <h2 class="text-lg font-bold text-gray-800">Daftar Menu Kafe</h2>
-                <button onclick="bukaModalMenu()" class="bg-amber-900 hover:bg-amber-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">+ Tambah Menu Baru</button>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b bg-gray-50 text-xs font-bold text-gray-600 uppercase">
-                            <th class="p-3">ID</th>
-                            <th class="p-3">Nama Menu</th>
-                            <th class="p-3">Kategori</th>
-                            <th class="p-3">Harga</th>
-                            <th class="p-3">Status</th>
-                            <th class="p-3 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabel-menu" class="text-sm text-gray-700">
-                        <tr><td colspan="6" class="p-4 text-center text-gray-400">Memuat data menu...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Riwayat Transaksi & Laporan Multi-Filter & WhatsApp Export -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <h2 id="report-title" class="text-lg font-bold text-gray-800">Riwayat Transaksi & Laporan Bulanan</h2>
-                
-                <!-- Area Filter & Tombol WhatsApp -->
-                <div class="flex flex-wrap items-center gap-3">
-                    <div>
-                        <label class="text-xs font-semibold text-gray-600 mr-2">Tipe Filter:</label>
-                        <select id="filter-type" onchange="toggleFilterOptions()" class="border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
-                            <option value="monthly" selected>Bulanan</option>
-                            <option value="weekly">Mingguan</option>
-                            <option value="daily">Harian</option>
-                            <option value="all">Semua</option>
-                        </select>
-                    </div>
-
-                    <!-- Target Filter Dinamis -->
-                    <div>
-                        <!-- Dropdown Bulan -->
-                        <select id="filter-bulan" onchange="renderTransaksi()" class="filter-target border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
-                            <option value="all">Semua Bulan</option>
-                        </select>
-
-                        <!-- Input Tanggal Harian -->
-                        <input type="date" id="filter-date" onchange="renderTransaksi()" class="filter-target hidden border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
-
-                        <!-- Input Minggu -->
-                        <input type="week" id="filter-week" onchange="renderTransaksi()" class="filter-target hidden border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
-                    </div>
-
-                    <!-- Tombol Ekspor WA & Bersihkan Data Lama -->
-                    <button onclick="exportMonthlyReportToWA()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm" title="Kirim rekap & arsip ke WhatsApp Owner">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Kirim Rekap WA & Arsip
-                    </button>
+                <div class="flex items-center gap-1" id="nav-tabs">
+                    <button data-tab="penjualan" onclick="showTab('penjualan')" class="nav-tab px-4 py-2 rounded-lg text-sm font-semibold transition">📈 Penjualan</button>
+                    <button data-tab="keuntungan" onclick="showTab('keuntungan')" class="nav-tab px-4 py-2 rounded-lg text-sm font-semibold transition">💰 Keuntungan</button>
+                    <button data-tab="menu" onclick="showTab('menu')" class="nav-tab px-4 py-2 rounded-lg text-sm font-semibold transition">🍽️ Kelola Menu</button>
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b bg-gray-50 text-xs font-bold text-gray-600 uppercase">
-                            <th class="p-3">ID Transaksi</th>
-                            <th class="p-3">Waktu (WIB)</th>
-                            <th class="p-3">Detail Item</th>
-                            <th class="p-3">Metode</th>
-                            <th class="p-3">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabel-transaksi" class="text-sm text-gray-700">
-                        <tr><td colspan="5" class="p-4 text-center text-gray-400">Memuat data transaksi...</td></tr>
-                    </tbody>
-                </table>
+            <div class="flex items-center gap-2">
+                <button onclick="loadData()" class="bg-amber-800 hover:bg-amber-700 px-3 py-2 rounded-lg text-sm font-semibold transition">Muat Ulang</button>
+                <button onclick="logout()" class="bg-red-700 hover:bg-red-800 px-3 py-2 rounded-lg text-sm font-semibold transition">Keluar</button>
             </div>
         </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto p-6 space-y-6">
+
+        <!-- FILTER PERIODE (dipakai tab Penjualan & Keuntungan) -->
+        <div id="filter-bar" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-3">
+                <div>
+                    <label class="text-xs font-semibold text-gray-600 mr-2">Periode:</label>
+                    <select id="filter-type" onchange="toggleFilterOptions()" class="border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
+                        <option value="monthly" selected>Bulanan</option>
+                        <option value="weekly">Mingguan</option>
+                        <option value="daily">Harian</option>
+                        <option value="all">Semua</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="filter-bulan" onchange="renderLaporan()" class="border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
+                        <option value="all">Semua Bulan</option>
+                    </select>
+                    <input type="date" id="filter-date" onchange="renderLaporan()" class="hidden border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
+                    <input type="week" id="filter-week" onchange="renderLaporan()" class="hidden border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
+                </div>
+            </div>
+
+            <!-- Tombol Laporan dengan pilihan: WhatsApp / Excel / PDF -->
+            <div class="relative">
+                <button onclick="toggleMenuLaporan(event)" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition shadow-sm">
+                    📄 Laporan
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div id="menu-laporan" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50">
+                    <button onclick="exportMonthlyReportToWA()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2">
+                        <span>💬</span><span><b class="block text-gray-800">Kirim ke WhatsApp</b><span class="text-xs text-gray-500">Rekap singkat sebagai pesan</span></span>
+                    </button>
+                    <button onclick="downloadCSV()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2">
+                        <span>📊</span><span><b class="block text-gray-800">Download Excel (CSV)</b><span class="text-xs text-gray-500">Rekap + semua transaksi</span></span>
+                    </button>
+                    <button onclick="cetakPDF()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2">
+                        <span>🖨️</span><span><b class="block text-gray-800">Cetak / Simpan PDF</b><span class="text-xs text-gray-500">Laporan siap cetak</span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB PENJUALAN ================= -->
+        <section id="tab-penjualan" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                    <p class="text-sm font-semibold text-gray-500">Omzet Bulan Ini</p>
+                    <h3 class="text-2xl font-extrabold text-amber-900 mt-2" id="omzet-bulan-ini">Rp 0</h3>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                    <p class="text-sm font-semibold text-gray-500">Transaksi Bulan Ini</p>
+                    <h3 class="text-2xl font-extrabold text-gray-800 mt-2" id="trx-bulan-ini">0</h3>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                    <p class="text-sm font-semibold text-gray-500">Omzet Keseluruhan</p>
+                    <h3 class="text-2xl font-extrabold text-emerald-700 mt-2" id="omzet-total">Rp 0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4">
+                <h2 id="report-title" class="text-lg font-bold text-gray-800">Hasil Penjualan Bulanan</h2>
+
+                <div class="grid grid-cols-3 gap-3 bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm">
+                    <div><p class="text-xs text-gray-500">Omzet Periode</p><p class="font-bold text-amber-900" id="p-omzet">Rp 0</p></div>
+                    <div><p class="text-xs text-gray-500">Jumlah Transaksi</p><p class="font-bold text-gray-800" id="p-trx">0</p></div>
+                    <div><p class="text-xs text-gray-500">Rata-rata / Transaksi</p><p class="font-bold text-gray-800" id="p-rata">Rp 0</p></div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b bg-gray-50 text-xs font-bold text-gray-600 uppercase">
+                                <th class="p-3">ID Transaksi</th>
+                                <th class="p-3">Waktu (WIB)</th>
+                                <th class="p-3">Detail Item</th>
+                                <th class="p-3">Metode</th>
+                                <th class="p-3">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-penjualan" class="text-sm text-gray-700">
+                            <tr><td colspan="5" class="p-4 text-center text-gray-400">Memuat data transaksi...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB KEUNTUNGAN ================= -->
+        <section id="tab-keuntungan" class="hidden space-y-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                    <p class="text-sm font-semibold text-gray-500">Keuntungan Bulan Ini</p>
+                    <h3 class="text-2xl font-extrabold text-emerald-700 mt-2" id="untung-bulan-ini">Rp 0</h3>
+                    <p class="text-xs text-gray-400 mt-1" id="margin-bulan-ini">Margin 0%</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                    <p class="text-sm font-semibold text-gray-500">Omzet Bulan Ini</p>
+                    <h3 class="text-2xl font-extrabold text-amber-900 mt-2" id="omzet-bulan-ini-k">Rp 0</h3>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                    <p class="text-sm font-semibold text-gray-500">Modal Bulan Ini</p>
+                    <h3 class="text-2xl font-extrabold text-gray-700 mt-2" id="modal-bulan-ini">Rp 0</h3>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                    <p class="text-sm font-semibold text-gray-500">Keuntungan Keseluruhan</p>
+                    <h3 class="text-2xl font-extrabold text-emerald-700 mt-2" id="untung-total">Rp 0</h3>
+                    <p class="text-xs text-gray-400 mt-1" id="modal-total">Modal Rp 0</p>
+                </div>
+            </div>
+            <p id="catatan-data-lama" class="text-xs text-amber-700 hidden"></p>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4">
+                <h2 id="report-title-k" class="text-lg font-bold text-gray-800">Laporan Keuntungan Bulanan</h2>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm">
+                    <div><p class="text-xs text-gray-500">Omzet Periode</p><p class="font-bold text-amber-900" id="k-omzet">Rp 0</p></div>
+                    <div><p class="text-xs text-gray-500">Modal Periode</p><p class="font-bold text-gray-700" id="k-modal">Rp 0</p></div>
+                    <div><p class="text-xs text-gray-500">Keuntungan Periode</p><p class="font-bold text-emerald-700" id="k-untung">Rp 0</p></div>
+                    <div><p class="text-xs text-gray-500">Margin</p><p class="font-bold text-gray-800" id="k-margin">0%</p></div>
+                </div>
+
+                <h3 class="text-sm font-bold text-gray-700 pt-2">Rekap per Hari</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b bg-gray-50 text-xs font-bold text-gray-600 uppercase">
+                                <th class="p-3">Tanggal</th>
+                                <th class="p-3">Transaksi</th>
+                                <th class="p-3">Omzet</th>
+                                <th class="p-3">Modal</th>
+                                <th class="p-3">Keuntungan</th>
+                                <th class="p-3">Margin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-harian" class="text-sm text-gray-700">
+                            <tr><td colspan="6" class="p-4 text-center text-gray-400">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="text-sm font-bold text-gray-700 pt-2">Detail per Transaksi</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b bg-gray-50 text-xs font-bold text-gray-600 uppercase">
+                                <th class="p-3">Waktu (WIB)</th>
+                                <th class="p-3">Detail Item</th>
+                                <th class="p-3">Total</th>
+                                <th class="p-3">Modal</th>
+                                <th class="p-3">Untung</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-untung" class="text-sm text-gray-700">
+                            <tr><td colspan="5" class="p-4 text-center text-gray-400">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB KELOLA MENU ================= -->
+        <section id="tab-menu" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-3">
+                    <h2 class="text-lg font-bold text-gray-800">Daftar Menu</h2>
+                    <div class="flex items-center gap-2">
+                        <select id="filter-jenis-menu" onchange="renderMenuTable()" class="border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
+                            <option value="Semua">Semua Jenis</option>
+                            <option value="Kafe">Kafe</option>
+                            <option value="Tobacco">Tobacco</option>
+                        </select>
+                        <button onclick="bukaModalMenu()" class="bg-amber-900 hover:bg-amber-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">+ Tambah Menu Baru</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b bg-gray-50 text-xs font-bold text-gray-600 uppercase">
+                                <th class="p-3">ID</th>
+                                <th class="p-3">Nama Menu</th>
+                                <th class="p-3">Jenis</th>
+                                <th class="p-3">Kategori</th>
+                                <th class="p-3">Harga Jual</th>
+                                <th class="p-3">Harga Modal</th>
+                                <th class="p-3">Laba/Item</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-menu" class="text-sm text-gray-700">
+                            <tr><td colspan="9" class="p-4 text-center text-gray-400">Memuat data menu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
     </div>
 
     <!-- Modal Tambah/Edit Menu -->
@@ -130,21 +238,33 @@
             <input type="hidden" id="edit-id-menu">
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Menu:</label>
-                <input type="text" id="input-nama" placeholder="Contoh: Kopi Susu Satheng" class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-900 outline-none">
+                <input type="text" id="input-nama" placeholder="Contoh: Kopi Susu Shateng" class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-900 outline-none">
             </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">Kategori:</label>
-                <select id="input-kategori" class="w-full border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
-                    <option value="Coffee">Coffee</option>
-                    <option value="Non-Coffee">Non-Coffee</option>
-                    <option value="Main Course">Main Course</option>
-                    <option value="Snack">Snack</option>
-                </select>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Jenis:</label>
+                    <select id="input-jenis" onchange="isiSaranKategori()" class="w-full border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
+                        <option value="Kafe">Kafe</option>
+                        <option value="Tobacco">Tobacco</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Kategori:</label>
+                    <input type="text" id="input-kategori" list="saran-kategori" placeholder="Pilih / ketik" class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-900 outline-none">
+                    <datalist id="saran-kategori"></datalist>
+                </div>
             </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">Harga (Rp):</label>
-                <input type="number" id="input-harga" placeholder="Contoh: 18000" class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-900 outline-none">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Harga Jual (Rp):</label>
+                    <input type="number" id="input-harga" min="0" oninput="hitungLabaForm()" placeholder="Contoh: 18000" class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-900 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Harga Modal (Rp):</label>
+                    <input type="number" id="input-modal" min="0" oninput="hitungLabaForm()" placeholder="Contoh: 7000" class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-900 outline-none">
+                </div>
             </div>
+            <p id="info-laba" class="text-xs text-gray-500 -mt-2">Laba per item: -</p>
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Status:</label>
                 <select id="input-status" class="w-full border rounded p-2 text-sm bg-white focus:ring-2 focus:ring-amber-900 outline-none">
@@ -160,14 +280,16 @@
     </div>
 
     <script>
-        // Cek Keamanan Sesi Login & Peran Owner
+        // ==========================================
+        // KEAMANAN SESI (hanya owner)
+        // ==========================================
         if (localStorage.getItem("satheng_role") !== "owner") {
             window.location.href = "index.html";
         }
 
         const namaOwner = localStorage.getItem("satheng_nama");
         if (namaOwner) {
-            document.getElementById('owner-info').innerText = `Selamat datang, ${namaOwner}! Pantau omzet dan kelola menu kafe.`;
+            document.getElementById('owner-info').innerText = `Selamat datang, ${namaOwner}`;
         }
 
         function logout() {
@@ -179,91 +301,125 @@
         let globalMenu = [];
         let globalTransaksi = [];
 
+        // ==========================================
+        // NAVBAR / TAB
+        // ==========================================
+        const TABS = ['penjualan', 'keuntungan', 'menu'];
+
+        function showTab(nama) {
+            if (!TABS.includes(nama)) nama = 'penjualan';
+
+            TABS.forEach(t => {
+                document.getElementById('tab-' + t).classList.toggle('hidden', t !== nama);
+            });
+
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                const aktif = btn.dataset.tab === nama;
+                btn.classList.toggle('bg-white', aktif);
+                btn.classList.toggle('text-amber-900', aktif);
+                btn.classList.toggle('hover:bg-amber-800', !aktif);
+            });
+
+            // Filter periode hanya relevan untuk Penjualan & Keuntungan
+            document.getElementById('filter-bar').classList.toggle('hidden', nama === 'menu');
+
+            try { history.replaceState(null, '', '#' + nama); } catch (e) {}
+        }
+
+        // ==========================================
+        // LOAD DATA
+        // ==========================================
         async function loadData() {
             try {
                 const res = await fetch(API_URL);
                 const data = await res.json();
                 globalMenu = data.menu || [];
                 globalTransaksi = data.transaksi || [];
-                
+
                 renderMenuTable();
                 populateFilterBulan();
-                renderTransaksi();
+                renderLaporan();
                 hitungRingkasan();
             } catch (err) {
                 alert("Gagal memuat data dari database.");
             }
         }
 
-        function renderMenuTable() {
-            const tbody = document.getElementById('tabel-menu');
-            if(globalMenu.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Belum ada menu di database.</td></tr>`;
-                return;
-            }
-            tbody.innerHTML = '';
-            globalMenu.forEach(item => {
-                tbody.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-3 font-semibold">${item.ID_Menu}</td>
-                        <td class="p-3">${item.Nama_Menu}</td>
-                        <td class="p-3"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${item.Kategori}</span></td>
-                        <td class="p-3">Rp ${Number(item.Harga).toLocaleString('id-ID')}</td>
-                        <td class="p-3"><span class="${item.Status === 'Tersedia' ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'} px-2 py-1 rounded text-xs font-semibold">${item.Status}</span></td>
-                        <td class="p-3 text-center space-x-2">
-                            <button onclick='editMenu("${item.ID_Menu}")' class="text-blue-600 hover:underline text-xs font-semibold">Edit</button>
-                            <button onclick='hapusMenu("${item.ID_Menu}")' class="text-red-600 hover:underline text-xs font-semibold">Hapus</button>
-                        </td>
-                    </tr>
-                `;
-            });
+        // ==========================================
+        // HELPER LAPORAN
+        // ==========================================
+        const rp = n => `Rp ${Number(n || 0).toLocaleString('id-ID')}`;
+
+        // Transaksi lama (sebelum fitur modal) tidak punya Total_Modal.
+        // Itu dikecualikan dari hitungan modal/untung supaya untung tidak terlihat terlalu besar.
+        function adaModal(t) {
+            return t.Total_Modal !== undefined && t.Total_Modal !== '' && t.Total_Modal !== null;
+        }
+        function untungTrx(t) {
+            return (Number(t.Total_Harga) || 0) - (Number(t.Total_Modal) || 0);
         }
 
-        function populateFilterBulan() {
-            const select = document.getElementById('filter-bulan');
-            const bulanSet = new Set();
-            globalTransaksi.forEach(t => {
-                if(t.Bulan_Tahun) bulanSet.add(t.Bulan_Tahun);
+        function hitungTotal(list) {
+            let omzet = 0, modal = 0, omzetBerModal = 0, lama = 0;
+            list.forEach(t => {
+                const harga = Number(t.Total_Harga) || 0;
+                omzet += harga;
+                if (adaModal(t)) {
+                    modal += Number(t.Total_Modal) || 0;
+                    omzetBerModal += harga;
+                } else {
+                    lama += 1;
+                }
             });
-
-            const currentVal = select.value;
-            select.innerHTML = '<option value="all">Semua Bulan</option>';
-            Array.from(bulanSet).sort().reverse().forEach(b => {
-                select.innerHTML += `<option value="${b}">${b}</option>`;
-            });
-            select.value = currentVal;
+            const untung = omzetBerModal - modal;
+            const margin = omzetBerModal > 0 ? (untung / omzetBerModal * 100) : 0;
+            return { omzet, modal, untung, omzetBerModal, margin, lama, trx: list.length };
         }
 
-        function toggleFilterOptions() {
-            const filterType = document.getElementById('filter-type').value;
-            const monthInput = document.getElementById('filter-bulan');
-            const dateInput = document.getElementById('filter-date');
-            const weekInput = document.getElementById('filter-week');
-            const title = document.getElementById('report-title');
+        // Tanggal transaksi (yyyy-mm-dd) dalam zona WIB
+        function tanggalWIB(waktu) {
+            if (!waktu) return '';
+            if (typeof waktu === 'string' && /^\d{4}-\d{2}-\d{2} \d/.test(waktu)) return waktu.slice(0, 10);
+            const d = new Date(waktu);
+            if (isNaN(d.getTime())) return '';
+            return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+        }
 
-            monthInput.classList.add('hidden');
-            dateInput.classList.add('hidden');
-            weekInput.classList.add('hidden');
+        // yyyy-mm-dd -> "yyyy-Www" (format input type=week)
+        function mingguISO(tgl) {
+            const [y, m, d] = tgl.split('-').map(Number);
+            const date = new Date(Date.UTC(y, m - 1, d));
+            const hari = date.getUTCDay() || 7;
+            date.setUTCDate(date.getUTCDate() + 4 - hari);
+            const awalTahun = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+            const minggu = Math.ceil(((date - awalTahun) / 86400000 + 1) / 7);
+            return `${date.getUTCFullYear()}-W${String(minggu).padStart(2, '0')}`;
+        }
 
-            if (filterType === 'daily') {
-                dateInput.classList.remove('hidden');
-                title.innerText = 'Riwayat Transaksi & Laporan Harian';
-            } else if (filterType === 'weekly') {
-                weekInput.classList.remove('hidden');
-                title.innerText = 'Riwayat Transaksi & Laporan Mingguan';
-            } else if (filterType === 'monthly') {
-                monthInput.classList.remove('hidden');
-                title.innerText = 'Riwayat Transaksi & Laporan Bulanan';
-            } else {
-                title.innerText = 'Riwayat Transaksi & Laporan Keseluruhan';
-            }
-            renderTransaksi();
+        // Kolom Bulan_Tahun di Google Sheets sering otomatis berubah jadi tanggal
+        // (contoh: "2026-10-31T17:00:00.000Z"), jadi bulan selalu dihitung ulang
+        // dari Waktu transaksi dalam zona WIB -> format "yyyy-mm".
+        function bulanTrx(t) {
+            const dariWaktu = tanggalWIB(t.Waktu);
+            if (dariWaktu) return dariWaktu.slice(0, 7);
+
+            const b = t.Bulan_Tahun;
+            if (!b) return '';
+            if (/^\d{4}-\d{2}$/.test(String(b))) return String(b);
+            const d = new Date(b);
+            if (isNaN(d.getTime())) return String(b);
+            return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }).slice(0, 7);
+        }
+
+        function labelBulan(b) {
+            const [y, m] = b.split('-').map(Number);
+            return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('id-ID', { month: 'long', year: 'numeric', timeZone: 'UTC' });
         }
 
         function formatWaktuWIB(utcString) {
             if (!utcString) return "-";
             const date = new Date(utcString);
-            if (isNaN(date.getTime())) return utcString; 
+            if (isNaN(date.getTime())) return utcString;
 
             return date.toLocaleString('id-ID', {
                 timeZone: 'Asia/Jakarta',
@@ -277,117 +433,411 @@
             }).replace(/\./g, ':');
         }
 
-        function renderTransaksi() {
-            const tbody = document.getElementById('tabel-transaksi');
+        function formatTanggalIndo(tgl) {
+            if (!tgl) return '-';
+            const [y, m, d] = tgl.split('-');
+            return `${d}/${m}/${y}`;
+        }
+
+        // ==========================================
+        // FILTER PERIODE
+        // ==========================================
+        let filterBulanSudahDiset = false;
+
+        function populateFilterBulan() {
+            const select = document.getElementById('filter-bulan');
+            const bulanSet = new Set();
+            globalTransaksi.forEach(t => {
+                const b = bulanTrx(t);
+                if (b) bulanSet.add(b);
+            });
+
+            const urut = Array.from(bulanSet).sort().reverse();
+            const currentVal = select.value;
+            select.innerHTML = '<option value="all">Semua Bulan</option>';
+            urut.forEach(b => {
+                select.innerHTML += `<option value="${b}">${labelBulan(b)}</option>`;
+            });
+
+            if (!filterBulanSudahDiset) {
+                // Pertama kali dibuka: langsung tampilkan bulan ini (atau bulan terbaru yang ada data)
+                const bulanIni = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }).slice(0, 7);
+                select.value = bulanSet.has(bulanIni) ? bulanIni : (urut[0] || 'all');
+                filterBulanSudahDiset = true;
+            } else {
+                select.value = urut.includes(currentVal) ? currentVal : 'all';
+            }
+        }
+
+        function toggleFilterOptions() {
             const filterType = document.getElementById('filter-type').value;
-            
+
+            document.getElementById('filter-bulan').classList.toggle('hidden', filterType !== 'monthly');
+            document.getElementById('filter-date').classList.toggle('hidden', filterType !== 'daily');
+            document.getElementById('filter-week').classList.toggle('hidden', filterType !== 'weekly');
+
+            const label = { daily: 'Harian', weekly: 'Mingguan', monthly: 'Bulanan', all: 'Keseluruhan' }[filterType];
+            document.getElementById('report-title').innerText = `Hasil Penjualan ${label}`;
+            document.getElementById('report-title-k').innerText = `Laporan Keuntungan ${label}`;
+
+            renderLaporan();
+        }
+
+        function getTransaksiTerfilter() {
+            const filterType = document.getElementById('filter-type').value;
             let filtered = globalTransaksi;
 
             if (filterType === 'monthly') {
                 const filterBulan = document.getElementById('filter-bulan').value;
                 if (filterBulan !== 'all') {
-                    filtered = globalTransaksi.filter(t => t.Bulan_Tahun === filterBulan);
+                    filtered = globalTransaksi.filter(t => bulanTrx(t) === filterBulan);
                 }
             } else if (filterType === 'daily') {
                 const filterDate = document.getElementById('filter-date').value;
-                if (filterDate) {
-                    // Format date yyyy-mm-dd dibandingkan dengan string waktu transaksi
-                    filtered = globalTransaksi.filter(t => {
-                        if(!t.Waktu) return false;
-                        return t.Waktu.startsWith(filterDate);
-                    });
-                } else {
-                    filtered = [];
-                }
+                filtered = filterDate
+                    ? globalTransaksi.filter(t => tanggalWIB(t.Waktu) === filterDate)
+                    : [];
             } else if (filterType === 'weekly') {
                 const filterWeek = document.getElementById('filter-week').value; // format: 2026-W15
                 if (filterWeek) {
                     filtered = globalTransaksi.filter(t => {
-                        if (!t.Waktu) return false;
-                        const d = new Date(t.Waktu);
-                        // Helper sederhana pencocokan minggu atau bisa disesuaikan
-                        return true; 
+                        const tgl = tanggalWIB(t.Waktu);
+                        return tgl !== '' && mingguISO(tgl) === filterWeek;
                     });
                 }
             }
 
-            if(filtered.length === 0) {
+            // Terbaru di atas
+            return filtered.slice().reverse();
+        }
+
+        function labelPeriode() {
+            const tipe = document.getElementById('filter-type').value;
+            if (tipe === 'monthly') {
+                const sel = document.getElementById('filter-bulan');
+                return sel.options[sel.selectedIndex].text;
+            }
+            if (tipe === 'daily') return document.getElementById('filter-date').value || '-';
+            if (tipe === 'weekly') return document.getElementById('filter-week').value || '-';
+            return 'Semua Waktu';
+        }
+
+        // ==========================================
+        // RENDER LAPORAN (Penjualan + Keuntungan)
+        // ==========================================
+        function renderLaporan() {
+            const filtered = getTransaksiTerfilter();
+            renderPenjualan(filtered);
+            renderKeuntungan(filtered);
+        }
+
+        function renderPenjualan(filtered) {
+            const r = hitungTotal(filtered);
+            document.getElementById('p-omzet').innerText = rp(r.omzet);
+            document.getElementById('p-trx').innerText = r.trx;
+            document.getElementById('p-rata').innerText = rp(r.trx ? Math.round(r.omzet / r.trx) : 0);
+
+            const tbody = document.getElementById('tabel-penjualan');
+            if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Tidak ada transaksi pada periode ini.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = '';
+            tbody.innerHTML = filtered.map(t => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 font-mono text-xs">${t.ID_Transaksi}</td>
+                    <td class="p-3 text-xs font-medium text-gray-600">${formatWaktuWIB(t.Waktu)} WIB</td>
+                    <td class="p-3">${t.Detail_Item}</td>
+                    <td class="p-3"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${t.Metode_Bayar}</span></td>
+                    <td class="p-3 font-bold text-amber-900">${rp(t.Total_Harga)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderKeuntungan(filtered) {
+            const r = hitungTotal(filtered);
+            document.getElementById('k-omzet').innerText = rp(r.omzet);
+            document.getElementById('k-modal').innerText = rp(r.modal);
+            document.getElementById('k-untung').innerText = rp(r.untung);
+            document.getElementById('k-margin').innerText = `${r.margin.toFixed(1)}%`;
+
+            // Rekap per hari
+            const perHari = {};
             filtered.forEach(t => {
-                const waktuWIB = formatWaktuWIB(t.Waktu);
-                tbody.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-3 font-mono text-xs">${t.ID_Transaksi}</td>
-                        <td class="p-3 text-xs font-medium text-gray-600">${waktuWIB} WIB</td>
-                        <td class="p-3">${t.Detail_Item}</td>
-                        <td class="p-3"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${t.Metode_Bayar}</span></td>
-                        <td class="p-3 font-bold text-amber-900">Rp ${Number(t.Total_Harga).toLocaleString('id-ID')}</td>
-                    </tr>
-                `;
+                const tgl = tanggalWIB(t.Waktu) || '-';
+                (perHari[tgl] = perHari[tgl] || []).push(t);
             });
+
+            const tbodyHarian = document.getElementById('tabel-harian');
+            const tanggalList = Object.keys(perHari).sort().reverse();
+            if (tanggalList.length === 0) {
+                tbodyHarian.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Tidak ada data pada periode ini.</td></tr>`;
+            } else {
+                tbodyHarian.innerHTML = tanggalList.map(tgl => {
+                    const h = hitungTotal(perHari[tgl]);
+                    return `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3 font-semibold">${formatTanggalIndo(tgl)}</td>
+                            <td class="p-3">${h.trx}</td>
+                            <td class="p-3 text-amber-900 font-semibold">${rp(h.omzet)}</td>
+                            <td class="p-3 text-gray-600">${rp(h.modal)}</td>
+                            <td class="p-3 font-bold ${h.untung < 0 ? 'text-red-600' : 'text-emerald-700'}">${rp(h.untung)}</td>
+                            <td class="p-3 text-gray-600">${h.margin.toFixed(1)}%</td>
+                        </tr>`;
+                }).join('');
+            }
+
+            // Detail per transaksi
+            const tbody = document.getElementById('tabel-untung');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Tidak ada transaksi pada periode ini.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = filtered.map(t => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 text-xs font-medium text-gray-600">${formatWaktuWIB(t.Waktu)} WIB</td>
+                    <td class="p-3">${t.Detail_Item}</td>
+                    <td class="p-3 font-semibold text-amber-900">${rp(t.Total_Harga)}</td>
+                    <td class="p-3 text-gray-600">${adaModal(t) ? rp(t.Total_Modal) : '-'}</td>
+                    <td class="p-3 font-semibold ${untungTrx(t) < 0 ? 'text-red-600' : 'text-emerald-700'}">${adaModal(t) ? rp(untungTrx(t)) : '-'}</td>
+                </tr>
+            `).join('');
         }
 
+        // ==========================================
+        // KARTU RINGKASAN (bulan ini & keseluruhan)
+        // ==========================================
         function hitungRingkasan() {
-            const now = new Date();
-            const currentMonth = now.toISOString().slice(0, 7);
+            const currentMonth = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }).slice(0, 7);
 
-            let omzetBulanIni = 0;
-            let trxBulanIni = 0;
-            let omzetTotal = 0;
+            const rb = hitungTotal(globalTransaksi.filter(t => bulanTrx(t) === currentMonth));
+            const rt = hitungTotal(globalTransaksi);
 
-            globalTransaksi.forEach(t => {
-                const harga = Number(t.Total_Harga) || 0;
-                omzetTotal += harga;
-                if(t.Bulan_Tahun === currentMonth) {
-                    omzetBulanIni += harga;
-                    trxBulanIni += 1;
-                }
-            });
+            document.getElementById('omzet-bulan-ini').innerText = rp(rb.omzet);
+            document.getElementById('omzet-bulan-ini-k').innerText = rp(rb.omzet);
+            document.getElementById('trx-bulan-ini').innerText = rb.trx;
+            document.getElementById('modal-bulan-ini').innerText = rp(rb.modal);
+            document.getElementById('untung-bulan-ini').innerText = rp(rb.untung);
+            document.getElementById('margin-bulan-ini').innerText = `Margin ${rb.margin.toFixed(1)}%`;
 
-            document.getElementById('omzet-bulan-ini').innerText = `Rp ${omzetBulanIni.toLocaleString('id-ID')}`;
-            document.getElementById('trx-bulan-ini').innerText = trxBulanIni;
-            document.getElementById('omzet-total').innerText = `Rp ${omzetTotal.toLocaleString('id-ID')}`;
+            document.getElementById('omzet-total').innerText = rp(rt.omzet);
+            document.getElementById('untung-total').innerText = rp(rt.untung);
+            document.getElementById('modal-total').innerText = `Modal ${rp(rt.modal)}`;
+
+            const catatan = document.getElementById('catatan-data-lama');
+            let pesan = '';
+            if (globalTransaksi.length > 0 && !globalTransaksi.some(t => 'Total_Modal' in t)) {
+                pesan = 'Kolom Total_Modal belum terbaca dari Google Sheets. Pastikan tab Transaksi punya header "Total_Modal" (kolom H) dan "Keuntungan" (kolom I).';
+            } else if (globalTransaksi.length > 0 && rt.lama === globalTransaksi.length) {
+                pesan = 'Belum ada transaksi yang tercatat modalnya. Pastikan Apps Script sudah di-deploy ulang (New version), kasir.html versi terbaru sudah online, dan Harga_Modal menu sudah diisi. Transaksi lama tidak otomatis terisi modalnya.';
+            } else if (rt.lama > 0) {
+                pesan = `Catatan: ${rt.lama} transaksi lama belum punya data modal, jadi tidak dihitung di modal & keuntungan.`;
+            }
+            catatan.innerText = pesan;
+            catatan.classList.toggle('hidden', pesan === '');
         }
+
+        // ==========================================
+        // EKSPOR WHATSAPP
+        // ==========================================
+        function toggleMenuLaporan(e) {
+            e.stopPropagation();
+            document.getElementById('menu-laporan').classList.toggle('hidden');
+        }
+        function tutupMenuLaporan() {
+            document.getElementById('menu-laporan').classList.add('hidden');
+        }
+        document.addEventListener('click', tutupMenuLaporan);
 
         function exportMonthlyReportToWA() {
-            const monthSelect = document.getElementById('filter-bulan');
-            const selectedMonthName = monthSelect.options[monthSelect.selectedIndex].text;
-            
-            let omzetPeriode = document.getElementById('omzet-bulan-ini').innerText;
-            let trxPeriode = document.getElementById('trx-bulan-ini').innerText;
+            tutupMenuLaporan();
+            const r = hitungTotal(getTransaksiTerfilter());
 
-            let message = `📊 *REKAP LAPORAN KAFE SATHENG*%0A`;
-            message += `📅 Periode: ${selectedMonthName}%0A`;
+            let message = `📊 *REKAP LAPORAN KAFE SHATENG*%0A`;
+            message += `📅 Periode: ${labelPeriode()}%0A`;
             message += `-----------------------------------%0A`;
-            message += `💰 *Total Omzet:* ${omzetPeriode}%0A`;
-            message += `📦 *Jumlah Transaksi:* ${trxPeriode} Pesanan%0A`;
+            message += `💰 *Omzet:* ${rp(r.omzet)}%0A`;
+            message += `🧾 *Modal:* ${rp(r.modal)}%0A`;
+            message += `✅ *Keuntungan:* ${rp(r.untung)} (${r.margin.toFixed(1)}%)%0A`;
+            message += `📦 *Jumlah Transaksi:* ${r.trx} Pesanan%0A`;
             message += `-----------------------------------%0A`;
-            message += `_Laporan otomatis diekspor dari sistem POS SATHENG_`;
+            message += `_Laporan otomatis diekspor dari sistem POS SHATENG_`;
 
             // Ganti nomor HP owner di bawah ini (Format kode negara tanpa angka 0, misal: 6281234567890)
-            const phoneOwner = "6281234567890"; 
-            
-            const waURL = `https://wa.me/${phoneOwner}?text=${message}`;
-            window.open(waURL, '_blank');
+            const phoneOwner = "6281234567890";
 
-            // Opsional: Konfirmasi pembersihan data lama agar ringan
-            setTimeout(() => {
-                if(confirm("Apakah Anda ingin mengarsipkan dan membersihkan data transaksi bulan lalu dari server/Google Sheets agar sistem kembali ringan?")) {
-                    alert("Fitur pembersihan data terhubung ke Google Apps Script backend. Pastikan script hapus data sudah dikonfigurasi.");
-                }
-            }, 1000);
+            window.open(`https://wa.me/${phoneOwner}?text=${message}`, '_blank');
+        }
+
+        // ==========================================
+        // DOWNLOAD EXCEL (CSV) & CETAK PDF
+        // ==========================================
+        function downloadCSV() {
+            tutupMenuLaporan();
+            const list = getTransaksiTerfilter();
+            const r = hitungTotal(list);
+            const periode = labelPeriode();
+
+            // Angka ditulis polos (tanpa "Rp") supaya bisa dijumlah di Excel.
+            // Pemisah kolom titik-koma (;) agar langsung rapi di Excel versi Indonesia.
+            const esc = v => typeof v === 'number' ? String(v) : `"${String(v ?? '').replace(/"/g, '""')}"`;
+            const baris = [
+                ['LAPORAN KAFE SHATENG'],
+                ['Periode', periode],
+                ['Omzet', r.omzet],
+                ['Modal', r.modal],
+                ['Keuntungan', r.untung],
+                ['Margin (%)', Number(r.margin.toFixed(1))],
+                ['Jumlah Transaksi', r.trx],
+                [],
+                ['ID Transaksi', 'Waktu (WIB)', 'Detail Item', 'Metode', 'Total', 'Modal', 'Untung']
+            ];
+            list.forEach(t => baris.push([
+                t.ID_Transaksi,
+                formatWaktuWIB(t.Waktu),
+                t.Detail_Item,
+                t.Metode_Bayar,
+                Number(t.Total_Harga) || 0,
+                adaModal(t) ? Number(t.Total_Modal) || 0 : '',
+                adaModal(t) ? untungTrx(t) : ''
+            ]));
+
+            const csv = '\uFEFF' + baris.map(b => b.map(esc).join(';')).join('\r\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `laporan-shateng-${periode.replace(/[^\w-]+/g, '-')}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function escapeHtml(v) {
+            return String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        }
+
+        function cetakPDF() {
+            tutupMenuLaporan();
+            const list = getTransaksiTerfilter();
+            const r = hitungTotal(list);
+            const periode = labelPeriode();
+
+            const baris = list.map(t => `
+                <tr>
+                    <td>${escapeHtml(formatWaktuWIB(t.Waktu))}</td>
+                    <td>${escapeHtml(t.Detail_Item)}</td>
+                    <td>${escapeHtml(t.Metode_Bayar)}</td>
+                    <td class="r">${rp(t.Total_Harga)}</td>
+                    <td class="r">${adaModal(t) ? rp(t.Total_Modal) : '-'}</td>
+                    <td class="r">${adaModal(t) ? rp(untungTrx(t)) : '-'}</td>
+                </tr>`).join('');
+
+            const w = window.open('', '_blank');
+            if (!w) {
+                alert('Pop-up diblokir browser. Izinkan pop-up untuk situs ini lalu coba lagi.');
+                return;
+            }
+            w.document.write(`<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8">
+                <title>Laporan KAFE SHATENG - ${escapeHtml(periode)}</title>
+                <style>
+                    body{font-family:Arial,sans-serif;color:#222;margin:24px;font-size:12px}
+                    h1{font-size:18px;margin:0}
+                    .sub{color:#666;margin:2px 0 14px}
+                    .ringkas{display:flex;gap:12px;margin-bottom:16px}
+                    .ringkas div{flex:1;border:1px solid #ddd;border-radius:6px;padding:8px 10px}
+                    .ringkas small{display:block;color:#666}
+                    .ringkas b{font-size:14px}
+                    table{width:100%;border-collapse:collapse}
+                    th,td{border-bottom:1px solid #e5e5e5;padding:6px 8px;text-align:left;vertical-align:top}
+                    th{background:#f5f5f5;font-size:11px;text-transform:uppercase}
+                    .r{text-align:right;white-space:nowrap}
+                    @media print{@page{size:A4;margin:12mm}}
+                </style></head><body>
+                <h1>LAPORAN KAFE SHATENG</h1>
+                <p class="sub">Periode: ${escapeHtml(periode)}</p>
+                <div class="ringkas">
+                    <div><small>Omzet</small><b>${rp(r.omzet)}</b></div>
+                    <div><small>Modal</small><b>${rp(r.modal)}</b></div>
+                    <div><small>Keuntungan</small><b>${rp(r.untung)}</b></div>
+                    <div><small>Margin</small><b>${r.margin.toFixed(1)}%</b></div>
+                    <div><small>Transaksi</small><b>${r.trx}</b></div>
+                </div>
+                <table>
+                    <thead><tr><th>Waktu (WIB)</th><th>Detail Item</th><th>Metode</th><th class="r">Total</th><th class="r">Modal</th><th class="r">Untung</th></tr></thead>
+                    <tbody>${baris || '<tr><td colspan="6">Tidak ada transaksi pada periode ini.</td></tr>'}</tbody>
+                </table>
+                </body></html>`);
+            w.document.close();
+            w.focus();
+            setTimeout(() => w.print(), 400);
+        }
+
+        // ==========================================
+        // KELOLA MENU
+        // ==========================================
+        const SARAN_KATEGORI = {
+            Kafe: ['Coffee', 'Non-Coffee', 'Main Course', 'Snack'],
+            Tobacco: ['Rokok', 'Vape', 'Aksesoris']
+        };
+
+        function jenisItem(item) {
+            return (item.Jenis && String(item.Jenis).trim()) || 'Kafe';
+        }
+
+        function isiSaranKategori() {
+            const jenis = document.getElementById('input-jenis').value;
+            document.getElementById('saran-kategori').innerHTML =
+                (SARAN_KATEGORI[jenis] || []).map(k => `<option value="${k}">`).join('');
+        }
+
+        function renderMenuTable() {
+            const tbody = document.getElementById('tabel-menu');
+            const filterJenis = document.getElementById('filter-jenis-menu').value;
+
+            const daftar = globalMenu.filter(m => filterJenis === 'Semua' || jenisItem(m) === filterJenis);
+
+            if (daftar.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-gray-400">Belum ada menu.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = daftar.map(item => {
+                const jual = Number(item.Harga) || 0;
+                const modal = Number(item.Harga_Modal) || 0;
+                const laba = jual - modal;
+                const modalKosong = item.Harga_Modal === undefined || item.Harga_Modal === '';
+                const jenis = jenisItem(item);
+                return `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 font-semibold">${item.ID_Menu}</td>
+                        <td class="p-3">${item.Nama_Menu}</td>
+                        <td class="p-3"><span class="${jenis === 'Tobacco' ? 'bg-stone-200 text-stone-800' : 'bg-amber-100 text-amber-800'} px-2 py-1 rounded text-xs font-semibold">${jenis}</span></td>
+                        <td class="p-3"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${item.Kategori}</span></td>
+                        <td class="p-3">${rp(jual)}</td>
+                        <td class="p-3">${modalKosong ? '<span class="text-xs text-amber-700">Belum diisi</span>' : rp(modal)}</td>
+                        <td class="p-3 font-semibold ${laba < 0 ? 'text-red-600' : 'text-emerald-700'}">${modalKosong ? '-' : rp(laba)}</td>
+                        <td class="p-3"><span class="${item.Status === 'Tersedia' ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'} px-2 py-1 rounded text-xs font-semibold">${item.Status}</span></td>
+                        <td class="p-3 text-center space-x-2">
+                            <button onclick='editMenu("${item.ID_Menu}")' class="text-blue-600 hover:underline text-xs font-semibold">Edit</button>
+                            <button onclick='hapusMenu("${item.ID_Menu}")' class="text-red-600 hover:underline text-xs font-semibold">Hapus</button>
+                        </td>
+                    </tr>`;
+            }).join('');
         }
 
         function bukaModalMenu() {
             document.getElementById('modal-title').innerText = "Tambah Menu Baru";
             document.getElementById('edit-id-menu').value = "";
             document.getElementById('input-nama').value = "";
+            document.getElementById('input-jenis').value = "Kafe";
+            document.getElementById('input-kategori').value = "";
             document.getElementById('input-harga').value = "";
+            document.getElementById('input-modal').value = "";
             document.getElementById('input-status').value = "Tersedia";
+            isiSaranKategori();
+            hitungLabaForm();
             document.getElementById('modal-menu').classList.remove('hidden');
         }
 
@@ -397,26 +847,58 @@
 
         function editMenu(id) {
             const item = globalMenu.find(m => m.ID_Menu === id);
-            if(!item) return;
+            if (!item) return;
             document.getElementById('modal-title').innerText = "Edit Menu";
             document.getElementById('edit-id-menu').value = item.ID_Menu;
             document.getElementById('input-nama').value = item.Nama_Menu;
-            document.getElementById('input-kategori').value = item.Kategori;
+            document.getElementById('input-jenis').value = jenisItem(item);
+            document.getElementById('input-kategori').value = item.Kategori || '';
             document.getElementById('input-harga').value = item.Harga;
+            document.getElementById('input-modal').value = item.Harga_Modal === undefined ? '' : item.Harga_Modal;
             document.getElementById('input-status').value = item.Status;
+            isiSaranKategori();
+            hitungLabaForm();
             document.getElementById('modal-menu').classList.remove('hidden');
+        }
+
+        function hitungLabaForm() {
+            const jual = Number(document.getElementById('input-harga').value) || 0;
+            const modalVal = document.getElementById('input-modal').value;
+            const info = document.getElementById('info-laba');
+            if (modalVal === '' || !jual) {
+                info.innerText = 'Laba per item: -';
+                info.className = 'text-xs text-gray-500 -mt-2';
+                return;
+            }
+            const laba = jual - Number(modalVal);
+            const margin = (laba / jual * 100).toFixed(1);
+            info.innerText = `Laba per item: ${rp(laba)} (margin ${margin}%)`;
+            info.className = `text-xs -mt-2 ${laba < 0 ? 'text-red-600 font-semibold' : 'text-emerald-700'}`;
         }
 
         async function simpanMenu() {
             const id = document.getElementById('edit-id-menu').value;
-            const nama = document.getElementById('input-nama').value;
-            const kategori = document.getElementById('input-kategori').value;
+            const nama = document.getElementById('input-nama').value.trim();
+            const jenis = document.getElementById('input-jenis').value;
+            const kategori = document.getElementById('input-kategori').value.trim();
             const harga = document.getElementById('input-harga').value;
+            const hargaModal = document.getElementById('input-modal').value;
             const status = document.getElementById('input-status').value;
             const btnSimpan = document.getElementById('btn-simpan-menu');
 
-            if(!nama || !harga) {
-                alert("Nama dan harga wajib diisi!");
+            if (!nama || !harga) {
+                alert("Nama dan harga jual wajib diisi!");
+                return;
+            }
+            if (!kategori) {
+                alert("Kategori wajib diisi!");
+                return;
+            }
+            if (hargaModal === '') {
+                alert("Harga modal wajib diisi (isi 0 jika memang tidak ada modal).");
+                return;
+            }
+            if (Number(hargaModal) > Number(harga) && !confirm("Harga modal lebih besar dari harga jual, menu ini akan rugi. Tetap simpan?")) {
                 return;
             }
 
@@ -424,12 +906,12 @@
             btnSimpan.disabled = true;
 
             const action = id ? "update_menu" : "add_menu";
-            const payload = { action, id_menu: id, nama_menu: nama, kategori, harga, status };
+            const payload = { action, id_menu: id, nama_menu: nama, jenis, kategori, harga, harga_modal: hargaModal, status };
 
             try {
                 const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
                 const result = await res.json();
-                if(result.status === "success") {
+                if (result.status === "success") {
                     tutupModalMenu();
                     loadData();
                 } else {
@@ -444,11 +926,11 @@
         }
 
         async function hapusMenu(id) {
-            if(!confirm("Yakin ingin menghapus menu ini?")) return;
+            if (!confirm("Yakin ingin menghapus menu ini?")) return;
             try {
                 const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "delete_menu", id_menu: id }) });
                 const result = await res.json();
-                if(result.status === "success") {
+                if (result.status === "success") {
                     loadData();
                 } else {
                     alert("Gagal menghapus menu.");
@@ -458,6 +940,11 @@
             }
         }
 
+        // ==========================================
+        // MULAI: langsung tampilkan tab Penjualan
+        // ==========================================
+        showTab((location.hash || '#penjualan').replace('#', ''));
+        toggleFilterOptions();
         loadData();
     </script>
 </body>
